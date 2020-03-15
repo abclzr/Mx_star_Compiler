@@ -96,9 +96,9 @@ expressionList
 
 
 creator
-    : (classType |primitiveType) ('[' expression']')+ ('['']')+ ('[' expression']')+ # errorCreator
-    | (classType |primitiveType) ('[' expression']')+ ('['']')* #arrayCreator
-    | (classType |primitiveType) ('(' ')' )?  #constructorCreator
+    : (classType | primitiveType) ('[' expression ']')+ ('['']')+ ('[' expression ']')+ #errorCreator
+    | (classType | primitiveType) ('[' expression ']')+ ('['']')* #arrayCreator
+    | (classType | primitiveType) ('(' ')')?  #constructorCreator
     ;
 
 primary
