@@ -72,7 +72,7 @@ expression
     : primary                                    #primaryExpr
     | expression op='.' Identifier               #memberExpr
     | expression '[' expression ']'              #arrayExpr
-    |  expression '(' expressionList? ')'        #methodCallExpr
+    | expression '(' expressionList? ')'         #methodCallExpr
     | NEW creator                                #newExpr
     | expression postfix=('++' | '--')           #postfixExpr
     | prefix=('+'|'-'|'++'|'--') expression      #prefixExpr
