@@ -12,15 +12,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ASTBuilder extends MxBaseVisitor<ASTNode> {
-
     @Override
     public ASTNode visitProgram(MxParser.ProgramContext ctx) {
-        List<ASTNode> list = new ArrayList<>();
+        List<ClassDeclNode> classDeclNodeList = new ArrayList<>();
+        List<FuncDeclNode> funcDeclNodeList = new ArrayList<>();
+        List<VarDeclNode> varDeclNodeList = new ArrayList<>();
         for (ParserRuleContext decl : ctx.declaration()) {
-            list.add(visit(decl));
+            ASTNode declNode = visit(decl);
+            if (declNode instanceof ClassDeclNode)
+                classDeclNodeList.add((ClassDeclNode) declNode);
+            if (declNode instanceof FuncDeclNode)
+                funcDeclNodeList.add((FuncDeclNode) declNode);
+            if (declNode instanceof VarDeclNode)
+                varDeclNodeList.add((VarDeclNode) declNode);
         }
-        return new ProgramNode(new Position(ctx.getStart()), list);
-    }
+        return new ProgramNode(new Position(ctx.getStart()), classDeclNodeList, funcDeclNodeList, varDeclNodeList);
+    }//done
 
     @Override
     public ASTNode visitDeclaration(MxParser.DeclarationContext ctx) {
@@ -28,137 +35,216 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         if (ctx.functionDeclaration() != null) return visit(ctx.functionDeclaration());
         if (ctx.variableDeclaration() != null) return visit(ctx.variableDeclaration());
         return null;
-    }
+    }//done
 
     @Override
     public ASTNode visitClassDeclaration(MxParser.ClassDeclarationContext ctx) {
-        return null;
-    }
+        String id = ctx.Identifier().getText();
+        ClassBodyNode classBody = (ClassBodyNode) visit(ctx.classBody());
+        return new ClassDeclNode(new Position(ctx.getStart()), id,
+                classBody.getVarDeclNodeList(), classBody.getMethodDeclNodeList());
+    }//done
 
     @Override
     public ASTNode visitClassBody(MxParser.ClassBodyContext ctx) {
-        return null;
-    }
+        List<VarDeclNode> v = new ArrayList<>();
+        List<MethodDeclNode> m = new ArrayList<>();
+        for (ParserRuleContext c : ctx.classBodyDeclaration()) {
+            ASTNode s = visit(c);
+            if (s instanceof VarDeclNode) {
+                v.add((VarDeclNode) s);
+            }
+            if (s instanceof MethodDeclNode) {
+                m.add((MethodDeclNode) s);
+            }
+        }
+        return new ClassBodyNode(new Position(ctx.getStart()), v, m);
+    }//done
 
     @Override
     public ASTNode visitClassBodyDeclaration(MxParser.ClassBodyDeclarationContext ctx) {
+        if (ctx.variableDeclaration() != null)
+            return visit(ctx.variableDeclaration());
+        if (ctx.methodDeclaration() != null)
+            return visit(ctx.methodDeclaration());
         return null;
-    }
+    }//done
 
     @Override
     public ASTNode visitMethodDeclaration(MxParser.MethodDeclarationContext ctx) {
-        return super.visitMethodDeclaration(ctx);
-    }
+        TypeOrVoidNode tpov;
+        boolean isCon;
+        if (ctx.typeOrVoid() != null) {
+            tpov = (TypeOrVoidNode) visit(ctx.typeOrVoid());
+            isCon = false;
+        } else {
+            tpov = null;
+            isCon = true;
+        }
+        String id = ctx.Identifier().getText();
+        ParametersNode pl = (ParametersNode) visit(ctx.parameters());
+        BlockNode bl = (BlockNode) visit(ctx.block());
+        return new MethodDeclNode(new Position(ctx.getStart()), tpov, id, pl.getParameterList(), bl, isCon);
+    }//done
 
     @Override
     public ASTNode visitVariableDeclaration(MxParser.VariableDeclarationContext ctx) {
-        return super.visitVariableDeclaration(ctx);
-    }
+        List<VarDecoratorNode> list = new ArrayList<>();
+        for (ParserRuleContext d : ctx.variableDecorator()) {
+            list.add((VarDecoratorNode) visit(d));
+        }
+        return new VarDeclNode(new Position(ctx.getStart()), (TypeNode) visit(ctx.type()), list);
+    }//done
 
     @Override
     public ASTNode visitVariableDecorator(MxParser.VariableDecoratorContext ctx) {
-        return super.visitVariableDecorator(ctx);
-    }
+        return new VarDecoratorNode(new Position(ctx.getStart()), ctx.Identifier().getText(),
+                (ExpressionNode) visit(ctx.expression()));
+    }//done
 
     @Override
     public ASTNode visitType(MxParser.TypeContext ctx) {
-        return super.visitType(ctx);
-    }
+        String s = ctx.getText();
+        int d = 0;
+        for (int i = 0; i < s.length(); ++i) {
+            if (s.charAt(i) == '[')
+                ++d;
+        }
+        if (ctx.classType() != null) {
+            ClassTypeNode c = (ClassTypeNode) visit(ctx.classType());
+            return new TypeNode(new Position(ctx.getStart()), c.getIdentifier(), false, d);
+        }
+        if (ctx.primitiveType() != null) {
+            PrimitiveTypeNode p = (PrimitiveTypeNode) visit(ctx.primitiveType());
+            return new TypeNode(new Position(ctx.getStart()), p.getIdentifier(), true, d);
+        }
+        return null;
+    }//done
 
     @Override
     public ASTNode visitTypeOrVoid(MxParser.TypeOrVoidContext ctx) {
-        return super.visitTypeOrVoid(ctx);
-    }
+        if (ctx.type() != null)
+            return new TypeOrVoidNode(new Position(ctx.getStart()), (TypeNode) visit(ctx.type()), false);
+        else
+            return new TypeOrVoidNode(new Position(ctx.getStart()), null, true);
+    }//done
 
     @Override
     public ASTNode visitClassType(MxParser.ClassTypeContext ctx) {
-        return super.visitClassType(ctx);
-    }
+        return new ClassTypeNode(new Position(ctx.getStart()), ctx.Identifier().getText());
+    }//done
 
     @Override
     public ASTNode visitPrimitiveType(MxParser.PrimitiveTypeContext ctx) {
-        return super.visitPrimitiveType(ctx);
-    }
+        return new PrimitiveTypeNode(new Position(ctx.getStart()), ctx.getText());
+    }//done
 
     @Override
     public ASTNode visitFunctionDeclaration(MxParser.FunctionDeclarationContext ctx) {
-        return super.visitFunctionDeclaration(ctx);
-    }
+        TypeOrVoidNode tpov = (TypeOrVoidNode) visit(ctx.typeOrVoid());
+        String id = ctx.Identifier().getText();
+        ParametersNode pl = (ParametersNode) visit(ctx.parameters());
+        BlockNode bl = (BlockNode) visit(ctx.block());
+        return new FuncDeclNode(new Position(ctx.getStart()), tpov, id, pl.getParameterList(), bl);
+    }//done
 
     @Override
     public ASTNode visitParameters(MxParser.ParametersContext ctx) {
-        return super.visitParameters(ctx);
-    }
+        return visit(ctx.parameterList());
+    }//done
 
     @Override
     public ASTNode visitParameterList(MxParser.ParameterListContext ctx) {
-        return super.visitParameterList(ctx);
-    }
+        List<ParameterNode> list = new ArrayList<>();
+        for (ParserRuleContext c : ctx.parameter()) {
+            list.add((ParameterNode) visit(c));
+        }
+        return new ParametersNode(new Position(ctx.getStart()), list);
+    }//done
 
     @Override
     public ASTNode visitParameter(MxParser.ParameterContext ctx) {
-        return super.visitParameter(ctx);
-    }
+        return new ParameterNode(new Position(ctx.getStart()),
+                (TypeNode) visit(ctx.type()), ctx.Identifier().getText());
+    }//done
 
     @Override
     public ASTNode visitBlock(MxParser.BlockContext ctx) {
-        return super.visitBlock(ctx);
-    }
+        return visit(ctx.blockStatement());
+    }//done
 
     @Override
     public ASTNode visitBlockStatement(MxParser.BlockStatementContext ctx) {
-        return super.visitBlockStatement(ctx);
-    }
+        List<StatementNode> list = new ArrayList<>();
+        for (ParserRuleContext c : ctx.statement()) {
+            list.add((StatementNode) visit(c));
+        }
+        return new BlockNode(new Position(ctx.getStart()), list);
+    }//done
 
     @Override
     public ASTNode visitBlockStmt(MxParser.BlockStmtContext ctx) {
-        return super.visitBlockStmt(ctx);
-    }
+        return visit(ctx.block());
+    }//done
 
     @Override
     public ASTNode visitIfStmt(MxParser.IfStmtContext ctx) {
-        return super.visitIfStmt(ctx);
-    }
+        ExpressionNode expr = (ExpressionNode) visit(ctx.expression());
+        StatementNode st1, st2;
+        st1 = (StatementNode) visit(ctx.statement(0));
+        if (ctx.statement().size() > 1)
+            st2 = (StatementNode) visit(ctx.statement(1));
+        else
+            st2 = null;
+        return new StatementNode(new Position(ctx.getStart()), StatementNode.Type.IF, expr, st1, st2);
+    }//done
 
     @Override
     public ASTNode visitForStmt(MxParser.ForStmtContext ctx) {
-        return super.visitForStmt(ctx);
-    }
+        ForControlNode forCon = (ForControlNode) visit(ctx.forControl());
+        StatementNode st = (StatementNode) visit(ctx.statement());
+        return new StatementNode(new Position(ctx.getStart()), StatementNode.Type.FOR, forCon, st);
+    }//done
 
     @Override
     public ASTNode visitWhileStmt(MxParser.WhileStmtContext ctx) {
-        return super.visitWhileStmt(ctx);
-    }
+        ExpressionNode expr = (ExpressionNode) visit(ctx.expression());
+        StatementNode st = (StatementNode) visit(ctx.statement());
+        return new StatementNode(new Position(ctx.getStart()), StatementNode.Type.WHILE, expr, st);
+    }//done
 
     @Override
     public ASTNode visitReturnStmt(MxParser.ReturnStmtContext ctx) {
-        return super.visitReturnStmt(ctx);
-    }
+        ExpressionNode expr = (ExpressionNode) visit(ctx.expression());
+        return new StatementNode(new Position(ctx.getStart()), StatementNode.Type.RETURN, expr);
+    }//done
 
     @Override
     public ASTNode visitBreakStmt(MxParser.BreakStmtContext ctx) {
-        return super.visitBreakStmt(ctx);
-    }
+        return new StatementNode(new Position(ctx.getStart()), StatementNode.Type.BREAK);
+    }//done
 
     @Override
     public ASTNode visitContinueStmt(MxParser.ContinueStmtContext ctx) {
-        return super.visitContinueStmt(ctx);
-    }
+        return new StatementNode(new Position(ctx.getStart()), StatementNode.Type.CONTINUE);
+    }//done
 
     @Override
     public ASTNode visitSemiStmt(MxParser.SemiStmtContext ctx) {
-        return super.visitSemiStmt(ctx);
-    }
+        return null;
+    }//done
 
     @Override
     public ASTNode visitExprStmt(MxParser.ExprStmtContext ctx) {
-        return super.visitExprStmt(ctx);
-    }
+        ExpressionNode expr = (ExpressionNode) visit(ctx.expression());
+        return new StatementNode(new Position(ctx.getStart()), StatementNode.Type.EXPR, expr);
+    }//done
 
     @Override
     public ASTNode visitVariableDeclStmt(MxParser.VariableDeclStmtContext ctx) {
-        return super.visitVariableDeclStmt(ctx);
-    }
+        VarDeclNode varDecl = (VarDeclNode) visit(ctx.variableDeclaration());
+        return new StatementNode(new Position(ctx.getStart()), StatementNode.Type.VARDECL, varDecl);
+    }//done
 
     @Override
     public ASTNode visitNewExpr(MxParser.NewExprContext ctx) {
@@ -302,6 +388,9 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitForControl(MxParser.ForControlContext ctx) {
-        return super.visitForControl(ctx);
-    }
+        ExpressionNode ex1 = (ExpressionNode) visit(ctx.initial);
+        ExpressionNode ex2 = (ExpressionNode) visit(ctx.condition);
+        ExpressionNode ex3 = (ExpressionNode) visit(ctx.update);
+        return new ForControlNode(new Position(ctx.getStart()), ex1, ex2, ex3);
+    }//done
 }
