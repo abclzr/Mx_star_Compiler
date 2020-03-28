@@ -1,5 +1,6 @@
 package AST;
 
+import Semantic.Scope;
 import Utils.Position;
 
 import java.beans.Expression;
@@ -27,6 +28,19 @@ public class StatementNode extends ASTNode {
     private ForControlNode forControl;
     private List<StatementNode> list;
     private VarDeclNode varDecl;
+    private Scope scope;
+
+    public Type getStmtType() {
+        return type;
+    }
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
+
+    public Scope getScope() {
+        return scope;
+    }
 
     public StatementNode(Position pos, Type tp, List<StatementNode> li) {
         super(pos);
@@ -126,8 +140,8 @@ public class StatementNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 
-    enum Type {BLOCK, IF, FOR, WHILE, RETURN, BREAK, CONTINUE, EXPR, VARDECL}
+    public enum Type {BLOCK, IF, FOR, WHILE, RETURN, BREAK, CONTINUE, EXPR, VARDECL}
 }

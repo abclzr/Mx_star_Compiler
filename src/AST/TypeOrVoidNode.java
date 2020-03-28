@@ -6,6 +6,11 @@ public class TypeOrVoidNode extends ASTNode {
     private TypeNode typeNode;
     private boolean isVoid;
 
+    public String getTypeName() {
+        if (isVoid) return "void";
+        else return typeNode.getIdentifier();
+    }
+
     public TypeOrVoidNode(Position pos, TypeNode _t, boolean isV) {
         super(pos);
         this.typeNode = _t;
@@ -22,6 +27,6 @@ public class TypeOrVoidNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

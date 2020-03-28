@@ -22,8 +22,12 @@ public class FuncDeclNode extends ASTNode {
         this.block = bl;
     }
 
-    public TypeOrVoidNode getTypOrVoid() {
+    public TypeOrVoidNode getTypeOrVoid() {
         return typeOrVoid;
+    }
+
+    public String getReturnTypeName() {
+        return typeOrVoid.getTypeName();
     }
 
     public String getIdentifier() {
@@ -40,6 +44,6 @@ public class FuncDeclNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

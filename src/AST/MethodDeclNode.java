@@ -1,5 +1,6 @@
 package AST;
 
+import Semantic.FunctionSymbol;
 import Utils.Position;
 
 import java.util.List;
@@ -14,6 +15,15 @@ public class MethodDeclNode extends ASTNode {
     private List<ParameterNode> parameterList;
     private BlockNode block;
     private boolean isConstructor;
+    private FunctionSymbol funcSymbol;
+
+    public void setFuncSymbol(FunctionSymbol func) {
+        funcSymbol = func;
+    }
+
+    public FunctionSymbol getFuncSymbol() {
+        return funcSymbol;
+    }
 
     MethodDeclNode(Position pos, TypeOrVoidNode tp, String id, List<ParameterNode> li, BlockNode bl, boolean is) {
         super(pos);
@@ -46,6 +56,6 @@ public class MethodDeclNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

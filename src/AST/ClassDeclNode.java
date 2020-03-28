@@ -1,5 +1,6 @@
 package AST;
 
+import Semantic.ClassType;
 import Utils.Position;
 
 import java.util.List;
@@ -15,6 +16,15 @@ public class ClassDeclNode extends ASTNode {
     private String identifier;
     private List<VarDeclNode> varDeclNodeList;
     private List<MethodDeclNode> methodDeclNodeList;
+    private ClassType classType;
+
+    public void setClassType(ClassType cT) {
+        this.classType = cT;
+    }
+
+    public ClassType getClassType() {
+        return classType;
+    }
 
     public ClassDeclNode(Position pos, String id, List<VarDeclNode> v, List<MethodDeclNode> m) {
         super(pos);
@@ -37,6 +47,6 @@ public class ClassDeclNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

@@ -1,5 +1,7 @@
 package AST;
 
+import Semantic.Scope;
+import Semantic.VariableSymbol;
 import Utils.Position;
 
 /*
@@ -9,6 +11,24 @@ variableDecorator: Identifier ( '=' expression)?;
 public class VarDecoratorNode extends ASTNode {
     private String id;
     private ExpressionNode expr;
+    private VariableSymbol variableSymbol;
+    private Scope scope;
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
+
+    public Scope getScope() {
+        return scope;
+    }
+
+    public void setVariableSymbol(VariableSymbol variableSymbol) {
+        this.variableSymbol = variableSymbol;
+    }
+
+    public VariableSymbol getVariableSymbol() {
+        return variableSymbol;
+    }
 
     public VarDecoratorNode(Position pos, String i, ExpressionNode e) {
         super(pos);
@@ -30,6 +50,6 @@ public class VarDecoratorNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

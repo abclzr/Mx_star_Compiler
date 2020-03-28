@@ -7,6 +7,10 @@ public class LiteralNode extends ASTNode {
     private String str;
     private int num;
 
+    public literalType getLiteralType() {
+        return type;
+    }
+
     LiteralNode(Position pos, literalType tp, String s, Integer a) {
         super(pos);
         type = tp;
@@ -16,8 +20,8 @@ public class LiteralNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 
-    enum literalType {STRING, INT, BOOL, NULL};
+    public enum literalType {STRING, INT, BOOL, NULL};
 }

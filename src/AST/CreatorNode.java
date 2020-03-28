@@ -1,5 +1,7 @@
 package AST;
 
+import Semantic.Scope;
+import Semantic.Type;
 import Utils.Position;
 
 import java.util.List;
@@ -9,8 +11,26 @@ public class CreatorNode extends ASTNode {
     private boolean isPrimitive;
     private List<ExpressionNode> expr;
     private int dimension;
+    private Scope scope;
+    private Type exprType;
 
-    public CreatorNode(Position pos, String id, boolean isPrimitive, List<ExpressionNode>ex, int di) {
+    public void setExprType(Type exprType) {
+        this.exprType = exprType;
+    }
+
+    public Type getExprType() {
+        return exprType;
+    }
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
+
+    public Scope getScope() {
+        return scope;
+    }
+
+    public CreatorNode(Position pos, String id, boolean isPrimitive, List<ExpressionNode> ex, int di) {
         super(pos);
         this.id = id;
         this.isPrimitive = isPrimitive;
@@ -25,6 +45,6 @@ public class CreatorNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

@@ -4,30 +4,19 @@ import Utils.Position;
 import java.util.List;
 
 public class ProgramNode extends ASTNode {
-    private List<ClassDeclNode> classDeclNodeList;
-    private List<FuncDeclNode> funcDeclNodeList;
-    private List<VarDeclNode> varDeclNodeList;
+    private List<ASTNode> declNodeList;
 
-    ProgramNode(Position pos, List<ClassDeclNode> l1, List<FuncDeclNode> l2, List<VarDeclNode> l3) {
+    ProgramNode(Position pos, List<ASTNode> l) {
         super(pos);
-        this.classDeclNodeList = l1;
-        this.funcDeclNodeList = l2;
-        this.varDeclNodeList = l3;
+        this.declNodeList = l;
     }
 
-    public List<ClassDeclNode> getClassDeclNodeList() {
-        return classDeclNodeList;
-    }
-
-    public List<FuncDeclNode> getFuncDeclNodeList() {
-        return funcDeclNodeList;
-    }
-
-    public List<VarDeclNode> getVarDeclNodeList() {
-        return varDeclNodeList;
+    public List<ASTNode> getDeclNodeList() {
+        return declNodeList;
     }
 
     @Override
     public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }

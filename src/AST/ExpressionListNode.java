@@ -18,6 +18,6 @@ public class ExpressionListNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

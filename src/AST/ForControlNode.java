@@ -1,5 +1,6 @@
 package AST;
 
+import Semantic.Scope;
 import Utils.Position;
 
 /*
@@ -10,6 +11,15 @@ forControl
 
 public class ForControlNode extends ASTNode {
     private ExpressionNode ex1, ex2, ex3;
+    Scope scope;
+
+    public Scope getScope() {
+        return scope;
+    }
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
 
     public ForControlNode(Position pos, ExpressionNode e1, ExpressionNode e2, ExpressionNode e3) {
         super(pos);
@@ -32,6 +42,6 @@ public class ForControlNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

@@ -79,7 +79,7 @@ expression
     | prefix=('~'|'!') expression                #prefixExpr
     | expression op=('*'|'/'|'%') expression     #binaryOpExpr
     | expression op=('+'|'-') expression         #binaryOpExpr
-    | expression op=('<<' | '>>>' | '>>') expression #binaryOpExpr
+    | expression op=('<<' | '>>') expression     #binaryOpExpr
     | expression op=('<=' | '>=' | '>' | '<') expression #binaryOpExpr
     | expression op=('==' | '!=') expression     #binaryOpExpr
     | expression op='&' expression               #binaryOpExpr

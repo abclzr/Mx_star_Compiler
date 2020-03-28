@@ -1,5 +1,8 @@
 package AST;
 
+import Semantic.FunctionSymbol;
+import Semantic.Scope;
+import Semantic.Type;
 import Utils.Position;
 
 import java.util.List;
@@ -42,12 +45,46 @@ public class ExpressionNode extends ASTNode {
     private ExpressionNode expr1, expr2;
     private List<ExpressionNode> exprList;
     private CreatorNode creator;
+    private Scope scope;
+    private Semantic.Type exprType;
+    private boolean isFunction;
+    private Semantic.FunctionSymbol funcSymbol;//only used for isFunction == true
+
+    public void setFunction(Semantic.FunctionSymbol fs) {
+        isFunction = true;
+        funcSymbol = fs;
+    }
+
+    public FunctionSymbol getFuncSymbol() {
+        return funcSymbol;
+    }
+
+    public boolean isFunction() {
+        return isFunction;
+    }
+
+    public void setExprType(Semantic.Type exprType) {
+        this.exprType = exprType;
+    }
+
+    public Semantic.Type getExprType() {
+        return exprType;
+    }
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
+
+    public Scope getScope() {
+        return scope;
+    }
 
     public ExpressionNode(Position pos, Type tp, String id) {
         super(pos);
         this.type = tp;
         assert tp == Type.IDENTIFIER;
         this.id = id;
+        this.isFunction = false;
     }
 
     public String getIdentifier() {
@@ -73,6 +110,7 @@ public class ExpressionNode extends ASTNode {
         this.expr1 = e1;
         this.op = op;
         this.expr2 = e2;
+        this.isFunction = false;
     }
 
     public ExpressionNode getBinaryExpr1() {
@@ -89,6 +127,7 @@ public class ExpressionNode extends ASTNode {
         assert tp == Type.PRE;
         this.op = op;
         this.expr1 = e1;
+        this.isFunction = false;
     }
 
     public ExpressionNode getPreExpr() {
@@ -101,6 +140,7 @@ public class ExpressionNode extends ASTNode {
         assert tp == Type.POST;
         this.expr1 = e1;
         this.op = op;
+        this.isFunction = false;
     }
 
     public ExpressionNode getPostExpr() {
@@ -112,12 +152,14 @@ public class ExpressionNode extends ASTNode {
         this.type = tp;
         assert tp == Type.LITERAL;
         this.literal = li;
+        this.isFunction = false;
     }
 
     public ExpressionNode(Position pos, Type tp) {
         super(pos);
         this.type = tp;
         assert tp == Type.THIS;
+        this.isFunction = false;
     }
 
     public ExpressionNode(Position pos, Type tp, ExpressionNode ex, String op, String id) {
@@ -127,6 +169,7 @@ public class ExpressionNode extends ASTNode {
         this.expr1 = ex;
         this.op = op;
         this.id = id;
+        this.isFunction = false;
     }
 
     public ExpressionNode getMemberExpr() {
@@ -139,6 +182,7 @@ public class ExpressionNode extends ASTNode {
         assert tp == Type.ARRAY;
         this.expr1 = ex1;
         this.expr2 = ex2;
+        this.isFunction = false;
     }
 
     public ExpressionNode getArrayExprBefore() {
@@ -155,6 +199,7 @@ public class ExpressionNode extends ASTNode {
         assert tp == Type.CALL;
         this.expr1 = ex1;
         this.exprList = list;
+        this.isFunction = false;
     }
 
     public ExpressionNode getCallExpr() {
@@ -170,6 +215,7 @@ public class ExpressionNode extends ASTNode {
         this.type = tp;
         assert tp == Type.NEW;
         this.creator = cr;
+        this.isFunction = false;
     }
 
     public CreatorNode getCreator() {
@@ -178,8 +224,8 @@ public class ExpressionNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 
-    enum Type {THIS, LITERAL, IDENTIFIER, MEMBER, ARRAY, CALL, NEW, POST, PRE, BINARY,}
+    public enum Type {THIS, LITERAL, IDENTIFIER, MEMBER, ARRAY, CALL, NEW, POST, PRE, BINARY,}
 }

@@ -14,19 +14,11 @@ import java.util.List;
 public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitProgram(MxParser.ProgramContext ctx) {
-        List<ClassDeclNode> classDeclNodeList = new ArrayList<>();
-        List<FuncDeclNode> funcDeclNodeList = new ArrayList<>();
-        List<VarDeclNode> varDeclNodeList = new ArrayList<>();
+        List<ASTNode> list = new ArrayList<>();
         for (ParserRuleContext decl : ctx.declaration()) {
-            ASTNode declNode = visit(decl);
-            if (declNode instanceof ClassDeclNode)
-                classDeclNodeList.add((ClassDeclNode) declNode);
-            if (declNode instanceof FuncDeclNode)
-                funcDeclNodeList.add((FuncDeclNode) declNode);
-            if (declNode instanceof VarDeclNode)
-                varDeclNodeList.add((VarDeclNode) declNode);
+            list.add(visit(decl));
         }
-        return new ProgramNode(new Position(ctx.getStart()), classDeclNodeList, funcDeclNodeList, varDeclNodeList);
+        return new ProgramNode(new Position(ctx.getStart()), list);
     }//done
 
     @Override
@@ -307,12 +299,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitErrorCreator(MxParser.ErrorCreatorContext ctx) {
-        try {
-            throw new SyntaxError("Invalid new expression", new Position(ctx.getStart()));
-        } catch (SyntaxError syntaxError) {
-            syntaxError.printStackTrace();
-        }
-        return null;
+        throw new SyntaxError("Invalid new operation", new Position(ctx.getStart()));
     }//done
 
     @Override

@@ -1,12 +1,17 @@
 
 import AST.ASTNode;
 import AST.ASTBuilder;
+import AST.ProgramNode;
 import Parser.MxParser;
 import Parser.MxLexer;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-import org.antlr.v4.runtime.CharStream;
+import Semantic.ClassAndFuncVisitor;
+import Semantic.Scope;
+import Semantic.SemanticCheckVisitor;
+import Utils.AccessError;
+import Utils.SyntaxError;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -20,7 +25,18 @@ public class Main {
     }
 
     public static void main(String... args) throws Exception {
-        InputStream in = new FileInputStream("test.txt");
-        ASTNode root = BuildAST(in);
+        try {
+            InputStream in = new FileInputStream("test.txt");
+            ASTNode root = BuildAST(in);
+
+            Scope globalScope = new Scope(null);
+            Scope.globalScope = globalScope;
+            globalScope.initGlobalScope();
+            new ClassAndFuncVisitor(globalScope).visit((ProgramNode) root);
+            new SemanticCheckVisitor(globalScope).visit((ProgramNode) root);
+        } catch (SyntaxError | AssertionError | AccessError e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
     }
 }

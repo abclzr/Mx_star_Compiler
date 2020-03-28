@@ -1,5 +1,6 @@
 package AST;
 
+import Semantic.Scope;
 import Utils.Position;
 
 import java.util.List;
@@ -11,6 +12,15 @@ variableDeclaration: type variableDecorator(',' variableDecorator)* ';';
 public class VarDeclNode extends ASTNode {
     private TypeNode type;
     private List<VarDecoratorNode> list;
+    private Scope scope;
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
+
+    public Scope getScope() {
+        return this.scope;
+    }
 
     VarDeclNode(Position pos, TypeNode tp, List<VarDecoratorNode> li) {
         super(pos);
@@ -28,6 +38,6 @@ public class VarDeclNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }

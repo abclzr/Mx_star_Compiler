@@ -16,6 +16,6 @@ public class ClassTypeNode extends ASTNode {
 
     @Override
     public void accept(ASTVisitor visitor) {
-
+        visitor.visit(this);
     }
 }
