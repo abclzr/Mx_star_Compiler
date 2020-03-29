@@ -5,9 +5,17 @@ import Utils.SemanticError;
 
 public class PrimitiveType extends Type {
     private Scope scope;
-    public PrimitiveType(String str, Scope scope) {
+
+    public PrimitiveType(String str) {
         super(str);
+    }
+
+    public void setScope(Scope scope) {
         this.scope = scope;
+    }
+
+    public Scope getScope() {
+        return scope;
     }
 
     @Override
@@ -27,6 +35,11 @@ public class PrimitiveType extends Type {
     @Override
     public boolean isPrimitiveType() {
         return true;
+    }
+
+    @Override
+    public boolean isStringType() {
+        return super.getTypeName().equals("string");
     }
 
     @Override

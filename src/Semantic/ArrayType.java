@@ -45,6 +45,11 @@ public class ArrayType extends Type {
     }
 
     @Override
+    public boolean isStringType() {
+        return false;
+    }
+
+    @Override
     public boolean isClassType() {
         return false;
     }

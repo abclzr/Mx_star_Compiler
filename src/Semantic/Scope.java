@@ -25,6 +25,11 @@ public class Scope {
     public static PrimitiveType voidType;
     public static PrimitiveType nullType;
 
+    public static FunctionSymbol lengthSymbol;
+    public static FunctionSymbol substringSymbol;
+    public static FunctionSymbol parseIntSymbol;
+    public static FunctionSymbol ordSymbol;
+
     public static FunctionSymbol printSymbol;
     public static FunctionSymbol printlnSymbol;
     public static FunctionSymbol printIntSymbol;
@@ -54,6 +59,14 @@ public class Scope {
         this.returnType = null;
         this.inLoop = false;
         this.classType = ct;
+    }
+
+    //for StringType
+    public Scope(Scope fa, PrimitiveType st) {
+        this.fatherScope = fa;
+        this.returnType = null;
+        this.inLoop = false;
+        this.classType = st;
     }
 
     //for Loop
@@ -86,16 +99,33 @@ public class Scope {
         boolType = new PrimitiveType("bool");
         voidType = new PrimitiveType("void");
         nullType = new PrimitiveType("null");
+
+        Scope stringScope = new Scope(globalScope, stringType);
+        List<Type> strParameter = new ArrayList<>();
+        strParameter.add(stringType);
+        List<Type> intParameter = new ArrayList<>();
+        intParameter.add(intType);
+        List<Type> doubleIntParameter = new ArrayList<>();
+        doubleIntParameter.add(intType); doubleIntParameter.add(intType);
+
+        lengthSymbol = new FunctionSymbol(intType, "length", null, new Position(null), stringScope, null);
+        substringSymbol = new FunctionSymbol(stringType, "substring", null, new Position(null), stringScope, doubleIntParameter);
+        parseIntSymbol = new FunctionSymbol(intType, "parseInt", null, new Position(null), stringScope, null);
+        ordSymbol = new FunctionSymbol(intType, "ord", null, new Position(null), stringScope, intParameter);
+
+        stringScope.addFunction(lengthSymbol);
+        stringScope.addFunction(substringSymbol);
+        stringScope.addFunction(parseIntSymbol);
+        stringScope.addFunction(ordSymbol);
+
+        stringType.setScope(stringScope);
+
         typeMap.put("string", stringType);
         typeMap.put("int", intType);
         typeMap.put("bool", boolType);
         typeMap.put("void", voidType);
         typeMap.put("null", nullType);
 
-        List<Type> strParameter = new ArrayList<>();
-        strParameter.add(stringType);
-        List<Type> intParameter = new ArrayList<>();
-        intParameter.add(intType);
         printSymbol = new FunctionSymbol(voidType, "print", null, new Position(null), this, strParameter);
         printlnSymbol = new FunctionSymbol(voidType, "println", null, new Position(null), this, strParameter);
         printIntSymbol = new FunctionSymbol(voidType, "printInt", null, new Position(null), this, intParameter);
@@ -103,6 +133,7 @@ public class Scope {
         getStringSymbol = new FunctionSymbol(stringType, "getString", null, new Position(null), this, null);
         getIntSymbol = new FunctionSymbol(intType, "getInt", null, new Position(null), this, null);
         toStringSymbol = new FunctionSymbol(stringType, "toString", null, new Position(null), this, intParameter);
+
         funcMap.put("print", printSymbol);
         funcMap.put("println", printlnSymbol);
         funcMap.put("printInt", printIntSymbol);
@@ -148,6 +179,11 @@ public class Scope {
     public FunctionSymbol findFunc(String func, Position pos) {
         if (funcMap.containsKey(func)) return funcMap.get(func);
         else if (this != globalScope) return globalScope.findFunc(func, pos);
+        else throw new SemanticError(func + " not found!", pos);
+    }
+
+    public FunctionSymbol findFuncInScope(String func, Position pos) {
+        if (funcMap.containsKey(func)) return funcMap.get(func);
         else throw new SemanticError(func + " not found!", pos);
     }
 

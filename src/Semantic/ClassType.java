@@ -42,6 +42,11 @@ public class ClassType extends Type {
     }
 
     @Override
+    public boolean isStringType() {
+        return false;
+    }
+
+    @Override
     public boolean isClassType() {
         return true;
     }

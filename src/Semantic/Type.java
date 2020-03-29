@@ -40,6 +40,8 @@ public abstract class Type {
 
     public abstract boolean isPrimitiveType();
 
+    public abstract boolean isStringType();
+
     public abstract boolean isClassType();
 
     public abstract boolean isNullType();

@@ -48,7 +48,16 @@ public class ExpressionNode extends ASTNode {
     private Scope scope;
     private Semantic.Type exprType;
     private boolean isFunction;
+    private boolean isLeftValue;
     private Semantic.FunctionSymbol funcSymbol;//only used for isFunction == true
+
+    public void setIsLeftValue(boolean i) {
+        this.isLeftValue = i;
+    }
+
+    public boolean isLeftValue() {
+        return isLeftValue;
+    }
 
     public void setFunction(Semantic.FunctionSymbol fs) {
         isFunction = true;
@@ -85,6 +94,7 @@ public class ExpressionNode extends ASTNode {
         assert tp == Type.IDENTIFIER;
         this.id = id;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public String getIdentifier() {
@@ -111,6 +121,7 @@ public class ExpressionNode extends ASTNode {
         this.op = op;
         this.expr2 = e2;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public ExpressionNode getBinaryExpr1() {
@@ -128,6 +139,7 @@ public class ExpressionNode extends ASTNode {
         this.op = op;
         this.expr1 = e1;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public ExpressionNode getPreExpr() {
@@ -141,6 +153,7 @@ public class ExpressionNode extends ASTNode {
         this.expr1 = e1;
         this.op = op;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public ExpressionNode getPostExpr() {
@@ -153,6 +166,7 @@ public class ExpressionNode extends ASTNode {
         assert tp == Type.LITERAL;
         this.literal = li;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public ExpressionNode(Position pos, Type tp) {
@@ -160,6 +174,7 @@ public class ExpressionNode extends ASTNode {
         this.type = tp;
         assert tp == Type.THIS;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public ExpressionNode(Position pos, Type tp, ExpressionNode ex, String op, String id) {
@@ -170,6 +185,7 @@ public class ExpressionNode extends ASTNode {
         this.op = op;
         this.id = id;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public ExpressionNode getMemberExpr() {
@@ -200,6 +216,7 @@ public class ExpressionNode extends ASTNode {
         this.expr1 = ex1;
         this.exprList = list;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public ExpressionNode getCallExpr() {
@@ -216,6 +233,7 @@ public class ExpressionNode extends ASTNode {
         assert tp == Type.NEW;
         this.creator = cr;
         this.isFunction = false;
+        this.isLeftValue = false;
     }
 
     public CreatorNode getCreator() {

@@ -112,18 +112,23 @@ public class SemanticCheckVisitor extends ASTVisitor {
             case IDENTIFIER:
                 VariableSymbol var = node.getScope().findVar(node.getIdentifier(), node.getPosition());
                 node.setExprType(var.getType());
+                node.setIsLeftValue(true);
                 break;
             case MEMBER:
                 node.getMemberExpr().setScope(node.getScope());
                 node.getMemberExpr().accept(this);
                 Type c = node.getMemberExpr().getExprType();
-                assert c instanceof ClassType;
-                ClassType cl = (ClassType) c;
+                assert c instanceof ClassType | c == Scope.stringType;
+                Scope classScope;
+                if (c instanceof ClassType) classScope = ((ClassType) c).getScope();
+                else classScope = ((PrimitiveType) c).getScope();
                 try {
-                    VariableSymbol vs = cl.getScope().findVarInScope(node.getIdentifier(), node.getPosition());
+                    VariableSymbol vs = classScope.findVarInScope(node.getIdentifier(), node.getPosition());
                     node.setExprType(vs.getType());
+                    node.setIsLeftValue(true);
                 } catch (SemanticError e) {
-                    FunctionSymbol fs = cl.getScope().findFunc(node.getIdentifier(), node.getPosition());
+                    FunctionSymbol fs = classScope.findFuncInScope(node.getIdentifier(), node.getPosition());
+                    node.setExprType(fs.getType());
                     node.setFunction(fs);
                 }
                 break;
@@ -141,20 +146,20 @@ public class SemanticCheckVisitor extends ASTVisitor {
                 node.getArrayExprAfter().accept(this);
                 assert Scope.intType.isSameTypeOf(node.getArrayExprAfter().getExprType());
                 node.setExprType(art);
+                node.setIsLeftValue(true);
                 break;
             case CALL:
                 node.getCallExpr().setScope(node.getScope());
                 node.getCallExpr().accept(this);
                 assert node.getCallExpr().isFunction();
-                FunctionSymbol func = node.getFuncSymbol();
+                FunctionSymbol func = node.getCallExpr().getFuncSymbol();
                 List<Type> list1 = func.getParameters();
                 Iterator<Type> it = list1.iterator();
-                List<Type> list2 = new ArrayList<>();
                 assert list1.size() == node.getCallExprList().size();
                 for (ExpressionNode ex : node.getCallExprList()) {
                     ex.setScope(node.getScope());
                     ex.accept(this);
-                    assert it.next().isSameTypeOf(node.getExprType());
+                    assert it.next().isSameTypeOf(ex.getExprType());
                 }
                 node.setExprType(func.getType());
                 break;
@@ -191,28 +196,55 @@ public class SemanticCheckVisitor extends ASTVisitor {
                         break;
                 }
                 break;
-            case BINARY://TODO: String type;
+            case BINARY:
                 node.getBinaryExpr1().setScope(node.getScope());
                 node.getBinaryExpr1().accept(this);
                 node.getBinaryExpr2().setScope(node.getScope());
                 node.getBinaryExpr2().accept(this);
                 switch (node.getOp()) {
-                    case "+": case "-": case "*": case "/": case "%": case "<<": case ">>": case "<=": case ">=":
-                    case "<": case ">": case "&": case "^": case "|":
+                    case "+": case "<=": case ">=": case "<": case ">":
+                        assert node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType());
+                        assert Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())
+                                || Scope.stringType.isSameTypeOf(node.getBinaryExpr1().getExprType());
+                        node.setExprType(node.getBinaryExpr1().getExprType());
+                        break;
+                    case "-": case "*": case "/": case "%": case "<<": case ">>":  case "&": case "^": case "|":
                         assert Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType());
                         assert Scope.intType.isSameTypeOf(node.getBinaryExpr2().getExprType());
+                        node.setExprType(Scope.intType);
                         break;
                     case "&&": case "||":
                         assert Scope.boolType.isSameTypeOf(node.getBinaryExpr1().getExprType());
                         assert Scope.boolType.isSameTypeOf(node.getBinaryExpr2().getExprType());
+                        node.setExprType(Scope.boolType);
                         break;
                     case "==": case "!=":
                         assert node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType());
+                        assert Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())
+                                || Scope.boolType.isSameTypeOf(node.getBinaryExpr1().getExprType())
+                                || Scope.stringType.isSameTypeOf(node.getBinaryExpr1().getExprType());
+                        node.setExprType(node.getBinaryExpr1().getExprType());
+                        break;
+                    case "=":
+                        if (Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
+                            assert Scope.intType.isSameTypeOf(node.getBinaryExpr2().getExprType());
+                        } else if (Scope.boolType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
+                            assert Scope.boolType.isSameTypeOf(node.getBinaryExpr2().getExprType());
+                        } else if (Scope.stringType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
+                            assert Scope.stringType.isSameTypeOf(node.getBinaryExpr2().getExprType());
+                        } else if (node.getBinaryExpr1().getExprType() instanceof ArrayType) {
+                            assert node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType())
+                                    || Scope.nullType.isSameTypeOf(node.getBinaryExpr2().getExprType());
+                        } else {
+                            throw new SemanticError("Type not found!", node.getPosition());
+                        }
+                        node.setExprType(node.getBinaryExpr1().getExprType());
+                        node.setIsLeftValue(node.getBinaryExpr1().isLeftValue());
                         break;
                 }
                 break;
         }
-    }
+    }//done
 
     @Override
     public void visit(ForControlNode node) {
@@ -235,7 +267,7 @@ public class SemanticCheckVisitor extends ASTVisitor {
     @Override
     public void visit(LiteralNode node) {
 
-    }
+    }//done
 
     @Override
     public void visit(MethodDeclNode node) {
