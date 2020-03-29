@@ -13,18 +13,21 @@ public class FunctionSymbol extends Symbol {
 
     public FunctionSymbol(Type tp, String na, ASTNode def, Position pos, Scope fatherScope, List<Type> li) {
         super(tp, na, def, pos);
-        this.scope = new Scope(fatherScope, tp);
-        this.list = li;
+        this.scope = new Scope(fatherScope, tp, this);
+        if (li != null) this.list = li;
+        else this.list = new ArrayList<>();
     }
 
     public FunctionSymbol(Type tp, String na, ASTNode def, Scope fatherScope, List<ParameterNode> list) {
         super(tp, na, def, def.getPosition());
-        this.scope = new Scope(fatherScope, tp);
+        this.scope = new Scope(fatherScope, tp, this);
         this.list = new ArrayList<>();
-        for (ParameterNode x : list) {
-            Type xType = Type.getType(x.getType());
-            this.list.add(xType);
-            this.scope.addVariable(new VariableSymbol(xType, x.getIdentifier(), x, x.getPosition()));
+        if (list != null) {
+            for (ParameterNode x : list) {
+                Type xType = Type.getType(x.getType());
+                this.list.add(xType);
+                this.scope.addVariable(new VariableSymbol(xType, x.getIdentifier(), x, x.getPosition()));
+            }
         }
     }
 

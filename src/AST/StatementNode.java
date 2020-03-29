@@ -113,6 +113,13 @@ public class StatementNode extends ASTNode {
         this.expr = ex;
     }
 
+    public StatementNode(Position pos, Type tp, boolean isVoidReturn) {
+        super(pos);
+        this.type = tp;
+        assert tp == Type.RETURN;
+        this.expr = null;
+    }
+
     public ExpressionNode getReturnExpr() {
         return expr;
     }

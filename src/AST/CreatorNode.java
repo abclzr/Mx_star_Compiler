@@ -4,6 +4,7 @@ import Semantic.Scope;
 import Semantic.Type;
 import Utils.Position;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CreatorNode extends ASTNode {
@@ -34,7 +35,8 @@ public class CreatorNode extends ASTNode {
         super(pos);
         this.id = id;
         this.isPrimitive = isPrimitive;
-        this.expr = ex;
+        if (ex == null) this.expr = new ArrayList<>();
+        else this.expr = ex;
         this.dimension = di;
     }
 

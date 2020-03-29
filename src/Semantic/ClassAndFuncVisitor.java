@@ -25,6 +25,8 @@ public class ClassAndFuncVisitor extends ASTVisitor {
         FunctionSymbol mainFunc = globalScope.findFunc("main", new Position(null));
         if (mainFunc.getType() != Scope.intType)
             throw new SemanticError("Not find int main()", mainFunc.getPos());
+        if (mainFunc.getParameters().size() > 0)
+            throw new SemanticError("int main() contains arguments!", mainFunc.getPos());
     }
 
     @Override

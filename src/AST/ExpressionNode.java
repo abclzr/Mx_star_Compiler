@@ -49,7 +49,26 @@ public class ExpressionNode extends ASTNode {
     private Semantic.Type exprType;
     private boolean isFunction;
     private boolean isLeftValue;
+    private boolean isConstInt;
+    private int constInt;
     private Semantic.FunctionSymbol funcSymbol;//only used for isFunction == true
+
+    public void setIsConstInt(boolean i) {
+        isConstInt = i;
+    }
+
+    public void setConstInt(int i) {
+        isConstInt = true;
+        constInt = i;
+    }
+
+    public boolean isConstInt() {
+        return isConstInt;
+    }
+
+    public int getConstInt() {
+        return constInt;
+    }
 
     public void setIsLeftValue(boolean i) {
         this.isLeftValue = i;
@@ -95,6 +114,7 @@ public class ExpressionNode extends ASTNode {
         this.id = id;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public String getIdentifier() {
@@ -122,6 +142,7 @@ public class ExpressionNode extends ASTNode {
         this.expr2 = e2;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public ExpressionNode getBinaryExpr1() {
@@ -140,6 +161,7 @@ public class ExpressionNode extends ASTNode {
         this.expr1 = e1;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public ExpressionNode getPreExpr() {
@@ -154,6 +176,7 @@ public class ExpressionNode extends ASTNode {
         this.op = op;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public ExpressionNode getPostExpr() {
@@ -167,6 +190,7 @@ public class ExpressionNode extends ASTNode {
         this.literal = li;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public ExpressionNode(Position pos, Type tp) {
@@ -175,17 +199,19 @@ public class ExpressionNode extends ASTNode {
         assert tp == Type.THIS;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public ExpressionNode(Position pos, Type tp, ExpressionNode ex, String op, String id) {
         super(pos);
         this.type = tp;
-        assert tp == Type.MEMBER && op.equals('.');
+        assert tp == Type.MEMBER && op.equals(".");
         this.expr1 = ex;
         this.op = op;
         this.id = id;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public ExpressionNode getMemberExpr() {
@@ -199,6 +225,8 @@ public class ExpressionNode extends ASTNode {
         this.expr1 = ex1;
         this.expr2 = ex2;
         this.isFunction = false;
+        this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public ExpressionNode getArrayExprBefore() {
@@ -217,6 +245,7 @@ public class ExpressionNode extends ASTNode {
         this.exprList = list;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public ExpressionNode getCallExpr() {
@@ -234,6 +263,7 @@ public class ExpressionNode extends ASTNode {
         this.creator = cr;
         this.isFunction = false;
         this.isLeftValue = false;
+        this.isConstInt = false;
     }
 
     public CreatorNode getCreator() {

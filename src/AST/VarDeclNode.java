@@ -3,6 +3,7 @@ package AST;
 import Semantic.Scope;
 import Utils.Position;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -25,7 +26,8 @@ public class VarDeclNode extends ASTNode {
     VarDeclNode(Position pos, TypeNode tp, List<VarDecoratorNode> li) {
         super(pos);
         this.type = tp;
-        this.list = li;
+        if (li != null) this.list = li;
+        else this.list = new ArrayList<>();
     }
 
     public TypeNode getType() {

@@ -3,6 +3,7 @@ package AST;
 import Semantic.FunctionSymbol;
 import Utils.Position;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -29,7 +30,8 @@ public class MethodDeclNode extends ASTNode {
         super(pos);
         this.typeOrVoid = tp;
         this.identifier= id;
-        this.parameterList = li;
+        if (li == null) this.parameterList = new ArrayList<>();
+        else this.parameterList = li;
         this.block = bl;
         this.isConstructor = is;
     }

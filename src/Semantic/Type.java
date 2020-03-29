@@ -34,8 +34,6 @@ public abstract class Type {
         return typeName;
     }
 
-    public abstract void sameTypeOf(Type tp, Position pos);
-
     public abstract boolean isArrayType();
 
     public abstract boolean isPrimitiveType();

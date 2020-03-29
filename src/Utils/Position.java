@@ -11,8 +11,12 @@ public class Position {
     }
 
     public Position(Token token) {
-        this.row = token.getLine();
-        this.col = token.getCharPositionInLine();
+        if (token == null)
+            this.row = this.col = 0;
+        else {
+            this.row = token.getLine();
+            this.col = token.getCharPositionInLine();
+        }
     }
 
     public String toString() {return "(" + row + ", " + col + ")";}

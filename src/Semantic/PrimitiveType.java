@@ -19,15 +19,6 @@ public class PrimitiveType extends Type {
     }
 
     @Override
-    public void sameTypeOf(Type tp, Position pos) {
-        if (getTypeName().equals(tp.getTypeName())) {
-
-        } else {
-            throw new SemanticError("Type error!", pos);
-        }
-    }
-
-    @Override
     public boolean isArrayType() {
         return false;
     }

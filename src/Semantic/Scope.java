@@ -14,6 +14,7 @@ public class Scope {
     private Scope fatherScope;
     private Type returnType;
     private Type classType;
+    private FunctionSymbol functionSymbol;
     private boolean inLoop;
     private Map<String, VariableSymbol> varMap = new LinkedHashMap<>();
     private Map<String, FunctionSymbol> funcMap = new LinkedHashMap<>();
@@ -38,19 +39,23 @@ public class Scope {
     public static FunctionSymbol getIntSymbol;
     public static FunctionSymbol toStringSymbol;
 
+    public static FunctionSymbol sizeSymbol;
+
     public Scope(Scope fa) {
         this.fatherScope = fa;
         if (fa != null) this.returnType = fa.returnType;
         if (fa != null) this.inLoop = fa.inLoop;
         if (fa != null) this.classType = fa.classType;
+        if (fa != null) this.functionSymbol = fa.functionSymbol;
     }
 
     //for FunctionSymbol
-    public Scope(Scope fa, Type rt) {
+    public Scope(Scope fa, Type rt, FunctionSymbol func) {
         this.fatherScope = fa;
         this.returnType = rt;
         this.inLoop = false;
         this.classType = fa.classType;
+        this.functionSymbol = func;
     }
 
     //for ClassType
@@ -59,6 +64,7 @@ public class Scope {
         this.returnType = null;
         this.inLoop = false;
         this.classType = ct;
+        this.functionSymbol = null;
     }
 
     //for StringType
@@ -67,6 +73,7 @@ public class Scope {
         this.returnType = null;
         this.inLoop = false;
         this.classType = st;
+        this.functionSymbol = null;
     }
 
     //for Loop
@@ -75,6 +82,15 @@ public class Scope {
         this.returnType = fa.returnType;
         this.inLoop = in;
         this.classType = fa.classType;
+        this.functionSymbol = fa.functionSymbol;
+    }
+
+    public FunctionSymbol getFunctionSymbol() {
+        return functionSymbol;
+    }
+
+    public void setFunctionSymbol(FunctionSymbol functionSymbol) {
+        this.functionSymbol = functionSymbol;
     }
 
     public void setClassType(Type classType) {
@@ -141,14 +157,25 @@ public class Scope {
         funcMap.put("getString", getStringSymbol);
         funcMap.put("getInt", getIntSymbol);
         funcMap.put("toString", toStringSymbol);
+
+        ArrayType.setScope(new Scope(globalScope));
+        sizeSymbol = new FunctionSymbol(intType, "size", null, new Position(null), ArrayType.getScope(), null);
+        ArrayType.getScope().addFunction(sizeSymbol);
     }
 
     public boolean alreadyContains(String str) {
         return varMap.containsKey(str) || funcMap.containsKey(str) || typeMap.containsKey(str);
     }
 
+    public boolean alreadyContainsVar(String str) {
+        if (varMap.containsKey(str) || funcMap.containsKey(str) || typeMap.containsKey(str))
+            return true;
+        else
+            return globalScope.typeMap.containsKey(str);
+    }
+
     public void addVariable(VariableSymbol var) {
-        if (alreadyContains(var.getName()))
+        if (alreadyContainsVar(var.getName()))
             throw new SemanticError("already contains " + var.getName(), var.getPos());
         varMap.put(var.getName(), var);
     }
@@ -177,9 +204,12 @@ public class Scope {
     }
 
     public FunctionSymbol findFunc(String func, Position pos) {
-        if (funcMap.containsKey(func)) return funcMap.get(func);
-        else if (this != globalScope) return globalScope.findFunc(func, pos);
-        else throw new SemanticError(func + " not found!", pos);
+        if (this == globalScope) {
+            return globalScope.findFuncInScope(func, pos);
+        } else {
+            if (funcMap.containsKey(func)) return funcMap.get(func);
+            else return fatherScope.findFunc(func, pos);
+        }
     }
 
     public FunctionSymbol findFuncInScope(String func, Position pos) {
@@ -190,5 +220,9 @@ public class Scope {
     public Type findType(String type, Position pos) {
         if (typeMap.containsKey(type)) return typeMap.get(type);
         else throw new SemanticError(type + " not defined!", pos);
+    }
+
+    public Scope getFatherScope() {
+        return fatherScope;
     }
 }

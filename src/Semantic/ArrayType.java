@@ -5,12 +5,21 @@ import Utils.SemanticError;
 
 public class ArrayType extends Type {
     private Type type;
+    static private Scope arrayScope;
     private int dimension;
 
     public ArrayType(String str, Type tp, int di) {
         super(str);
         this.type = tp;
         this.dimension = di;
+    }
+
+    public static void setScope(Scope scope) {
+        arrayScope = scope;
+    }
+
+    public static Scope getScope() {
+        return arrayScope;
     }
 
     public Type getType() {
@@ -23,15 +32,6 @@ public class ArrayType extends Type {
 
     public void dimensionPlusOne() {
         dimension++;
-    }
-
-    @Override
-    public void sameTypeOf(Type tp, Position pos) {
-        if (getTypeName().equals(tp.getTypeName())) {
-
-        } else {
-            throw new SemanticError("Type error!", pos);
-        }
     }
 
     @Override
@@ -62,7 +62,7 @@ public class ArrayType extends Type {
     @Override
     public boolean isSameTypeOf(Type type) {
         if (type.isArrayType()) {
-            return this.type == type && this.dimension == ((ArrayType) type).getDimension();
+            return this.type == ((ArrayType) type).getType() && this.dimension == ((ArrayType) type).getDimension();
         } else {
             return false;
         }

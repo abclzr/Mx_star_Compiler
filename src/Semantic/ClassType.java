@@ -10,7 +10,7 @@ public class ClassType extends Type {
 
     public ClassType(String name, Scope fatherScope, ASTNode def) {
         super(name);
-        this.scope = new Scope(fatherScope);
+        this.scope = new Scope(fatherScope, this);
         this.define = def;
     }
 
@@ -20,15 +20,6 @@ public class ClassType extends Type {
 
     public ASTNode getDefine() {
         return define;
-    }
-
-    @Override
-    public void sameTypeOf(Type tp, Position pos) {
-        if (getTypeName().equals(tp.getTypeName())) {
-
-        } else {
-            throw new SemanticError("Type error!", pos);
-        }
     }
 
     @Override

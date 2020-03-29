@@ -11,6 +11,14 @@ public class LiteralNode extends ASTNode {
         return type;
     }
 
+    public String getStr() {
+        return str;
+    }
+
+    public int getNum() {
+        return num;
+    }
+
     LiteralNode(Position pos, literalType tp, String s, Integer a) {
         super(pos);
         type = tp;

@@ -38,7 +38,7 @@ program: (declaration)* EOF;
 declaration: (classDeclaration | functionDeclaration | variableDeclaration);
 
 classDeclaration: CLASS Identifier classBody;
-classBody: '{' classBodyDeclaration* '}';
+classBody: '{' classBodyDeclaration* '}' ';'?;
 classBodyDeclaration: variableDeclaration
                     | methodDeclaration;
 methodDeclaration: (typeOrVoid)? Identifier parameters block;
