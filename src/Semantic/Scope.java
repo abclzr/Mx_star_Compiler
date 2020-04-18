@@ -225,4 +225,8 @@ public class Scope {
     public Scope getFatherScope() {
         return fatherScope;
     }
+
+    public Map<String, Type> getTypeMap() {
+        return typeMap;
+    }
 }

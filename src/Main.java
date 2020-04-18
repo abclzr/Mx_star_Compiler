@@ -2,6 +2,7 @@
 import AST.ASTNode;
 import AST.ASTBuilder;
 import AST.ProgramNode;
+import Frontend.IRBuilder;
 import Parser.MxErrorListener;
 import Parser.MxParser;
 import Parser.MxLexer;
@@ -46,6 +47,9 @@ public class Main {
             new ClassAndFuncVisitor(globalScope).visit((ProgramNode) root);
             new ClassMemberVisitor(globalScope).visit((ProgramNode) root);
             new SemanticCheckVisitor(globalScope).visit((ProgramNode) root);
+
+            IRBuilder irBuilder = new IRBuilder(globalScope);
+            irBuilder.visit((ProgramNode) root);
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());

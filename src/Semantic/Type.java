@@ -6,6 +6,14 @@ import Utils.Position;
 
 public abstract class Type {
     private String typeName;
+    protected int width;
+
+    public abstract void setWidth();
+
+    public int getWidth() {
+        return width;
+    }
+    public abstract int getAllocWidth();
 
     public Type(String str) {
         this.typeName = str;

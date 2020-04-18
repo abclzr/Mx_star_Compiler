@@ -35,6 +35,16 @@ public class ArrayType extends Type {
     }
 
     @Override
+    public int getAllocWidth() {
+        return super.width;
+    }
+
+    @Override
+    public void setWidth() {
+        super.width = 4;
+    }
+
+    @Override
     public boolean isArrayType() {
         return true;
     }
