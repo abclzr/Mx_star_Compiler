@@ -1,5 +1,6 @@
 package Frontend;
 
+import Semantic.Type;
 import Semantic.VariableSymbol;
 
 public class VirtualRegister {
@@ -7,12 +8,14 @@ public class VirtualRegister {
     private VariableSymbol varSymbol;
     private int value;
     private int width;
+    private Type type;
     private int relativeAddress;
 
-    VirtualRegister(CodeSegment inCode, int width) {
+    VirtualRegister(CodeSegment inCode, Type tp) {
         this.inCodeSegment = inCode;
-        this.width = width;
         this.value = 0;
-        this.relativeAddress = inCode.Allocate(width);
+        this.width = tp.getWidth();
+        this.type = tp;
+        this.relativeAddress = inCode.Allocate(this.width);
     }
 }

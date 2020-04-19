@@ -2,6 +2,7 @@ package Semantic;
 
 import AST.ASTNode;
 import AST.ParameterNode;
+import Frontend.CodeSegment;
 import Utils.Position;
 
 import java.util.ArrayList;
@@ -10,6 +11,15 @@ import java.util.List;
 public class FunctionSymbol extends Symbol {
     private Scope scope;
     private List<Type> list;
+    private CodeSegment codeSegment;
+
+    public void setCodeSegment(CodeSegment codeSegment) {
+        this.codeSegment = codeSegment;
+    }
+
+    public CodeSegment getCodeSegment() {
+        return codeSegment;
+    }
 
     public FunctionSymbol(Type tp, String na, ASTNode def, Position pos, Scope fatherScope, List<Type> li) {
         super(tp, na, def, pos);

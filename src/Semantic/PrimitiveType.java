@@ -13,7 +13,7 @@ public class PrimitiveType extends Type {
         else if (super.getTypeName().equals("bool")) super.width = 1;
         else if (super.getTypeName().equals("int")) super.width = 4;
         else if (super.getTypeName().equals("void")) super.width = 0;
-        else if (super.getTypeName().equals("null")) super.width = 0;
+        else if (super.getTypeName().equals("null")) super.width = 4;
         else throw new SyntaxError("Primitive type not found!", null);
     }
 
