@@ -17,12 +17,19 @@ public class IRBuilder extends ASTVisitor {
     private CodeSegment currentSegment;
     private VirtualRegister sp;
     private VirtualRegister ap;
+    private List<CopyInstruction> constPoolWriteBack;
+
+    //things to write back:
+    //const pool pointer
+    //global variable address
+    //function pointer
 
     private List<Type> typeList;
 
     public IRBuilder(Scope globalScope) {
         super(globalScope);
         segmentList = new ArrayList<>();
+        constPoolWriteBack = new ArrayList<>();
     }
 
     @Override
@@ -143,7 +150,9 @@ public class IRBuilder extends ASTVisitor {
                         int s = constantPoolTable.getAddress();
                         constantPoolTable.allocate(node.getLiteralNode().getStr());
                         vn = new VirtualRegister(currentSegment, Scope.stringType);
-                        currentSegment.addIRInst(new CopyInstruction(IRInstruction.op.COPY, vn, s));
+                        CopyInstruction ci = new CopyInstruction(IRInstruction.op.COPY, vn, s);
+                        currentSegment.addIRInst(ci);
+                        constPoolWriteBack.add(ci);
                         node.setVirtualRegister(vn);
                         break;
                     case INT:
@@ -167,8 +176,20 @@ public class IRBuilder extends ASTVisitor {
                 break;
             case IDENTIFIER:
                 if (!node.isFunction()) {
+                    assert node.isLeftValue();
                     VariableSymbol var = node.getScope().findVar(node.getIdentifier(), node.getPosition());
-                    node.setVirtualRegister(var.getVirtualRegister());
+                    VirtualRegister varReg = var.getVirtualRegister();
+                    int offset = varReg.getRelativeAddress();
+                    VirtualRegister addr = new VirtualRegister(currentSegment, Scope.intType);
+                    if (varReg.getInCodeSegment() == globalVarSegment) {
+                        currentSegment.addIRInst(new CopyInstruction(IRInstruction.op.COPY, addr, varReg.getAddr()));
+                        node.setVirtualRegister(addr);
+                    } else {
+                        VirtualRegister offsetReg = new VirtualRegister(currentSegment, Scope.intType);
+                        currentSegment.addIRInst(new CopyInstruction(IRInstruction.op.COPY, offsetReg, offset));
+                        currentSegment.addIRInst(new BinaryInstruction(IRInstruction.op.BINARY, addr, sp, "+", offsetReg));
+                        node.setVirtualRegister(var.getVirtualRegister());
+                    }
                 } else {
                     FunctionSymbol func = node.getScope().findFunc(node.getIdentifier(), node.getPosition());
                     node.setFuncPointer(func.getCodeSegment());
