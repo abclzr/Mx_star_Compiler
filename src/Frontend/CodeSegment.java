@@ -7,9 +7,9 @@ import java.util.List;
 
 public class CodeSegment {
     private FunctionSymbol functionSymbol;
-    private List<IRInstruction> instList;
     private int stackStorage;
     private VirtualRegister thisPointer;
+    private BasicBlock headBlock;
 
     public void setThisPointer(VirtualRegister thisPointer) {
         this.thisPointer = thisPointer;
@@ -22,7 +22,7 @@ public class CodeSegment {
     CodeSegment(FunctionSymbol inFunc) {
         this.functionSymbol = inFunc;
         inFunc.setCodeSegment(this);
-        this.instList = new ArrayList<>();
+        this.headBlock = new BasicBlock(this);
         stackStorage = 0;
         thisPointer = null;
     }
@@ -32,7 +32,7 @@ public class CodeSegment {
         return stackStorage - width;
     }
 
-    public void addIRInst(IRInstruction inst) {
-        instList.add(inst);
+    public BasicBlock getHeadBlock() {
+        return headBlock;
     }
 }

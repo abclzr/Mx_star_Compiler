@@ -1,6 +1,7 @@
 package Semantic;
 
 import AST.ASTNode;
+import Frontend.Address;
 import Frontend.VirtualRegister;
 import Utils.Position;
 

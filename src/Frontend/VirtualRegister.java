@@ -19,6 +19,7 @@ public class VirtualRegister {
         this.type = tp;
         this.relativeAddress = inCode.Allocate(this.width);
         addr = new Address();
+        addr.setAddr(this.relativeAddress);
     }
 
     public int getRelativeAddress() {
