@@ -193,7 +193,14 @@ public class IRBuilder extends ASTVisitor {
                 ComputExprValue(node.getArrayExprAfter());
                 VirtualRegister bef = node.getArrayExprBefore().getVirtualRegister();
                 VirtualRegister aft = node.getArrayExprAfter().getVirtualRegister();
-                int a = node.getExprType();
+                int a = node.getExprType().getWidth();
+                VirtualRegister off = new VirtualRegister(currentSegment, Scope.intType);
+                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, off, aft, "*", a));
+                VirtualRegister off2 = new VirtualRegister(currentSegment, Scope.intType);
+                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, off2, bef, "+", off));
+                vn = new VirtualRegister(currentSegment, node.getExprType());
+                currentBlock.addInst(new LoadInstruction(IRInstruction.op.LOAD, vn, off2, 0, node.getExprType()));
+                node.setVirtualRegister(vn);
                 break;
             case CALL:
                 node.getCallExpr().setScope(node.getScope());
