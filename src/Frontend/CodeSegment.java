@@ -21,7 +21,7 @@ public class CodeSegment {
 
     CodeSegment(FunctionSymbol inFunc) {
         this.functionSymbol = inFunc;
-        inFunc.setCodeSegment(this);
+        if (inFunc != null) inFunc.setCodeSegment(this);
         this.headBlock = new BasicBlock(this);
         stackStorage = 0;
         thisPointer = null;

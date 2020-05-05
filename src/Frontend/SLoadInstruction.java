@@ -14,4 +14,12 @@ public class SLoadInstruction extends IRInstruction {
         this.offset = addr;
         this.width = tp.getWidth();
     }
+    SLoadInstruction(IRInstruction.op o, VirtualRegister lhs, int addr, Type tp) {
+        super(o);
+        assert o == IRInstruction.op.SLOAD;
+        this.lhs = lhs;
+        this.offset = new Address();
+        this.offset.setAddr(addr);
+        this.width = tp.getWidth();
+    }
 }

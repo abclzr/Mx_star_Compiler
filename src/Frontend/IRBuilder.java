@@ -20,6 +20,8 @@ public class IRBuilder extends ASTVisitor {
     private VirtualRegister startsp;
     private VirtualRegister ap;
     private List<CopyInstruction> constPoolWriteBack;
+    private CodeSegment stringAdd;
+    private CodeSegment stringCmp;
 
     //things to write back:
     //const pool pointer
@@ -34,6 +36,39 @@ public class IRBuilder extends ASTVisitor {
         constPoolWriteBack = new ArrayList<>();
     }
 
+    private void fullfillStringAdd() {
+        /*
+        currentSegment = stringAdd;
+        currentBlock = stringAdd.getHeadBlock();
+        //load 2 address
+        VirtualRegister r1 = new VirtualRegister(currentSegment, Scope.intType);
+        VirtualRegister r2 = new VirtualRegister(currentSegment, Scope.intType);
+        currentBlock.addInst(new SLoadInstruction(IRInstruction.op.SLOAD, r1, 0, Scope.intType));
+        currentBlock.addInst(new SLoadInstruction(IRInstruction.op.SLOAD, r2, 4, Scope.intType));
+        //load 2 lengths
+        VirtualRegister len1 = new VirtualRegister(currentSegment, Scope.intType);
+        VirtualRegister len2 = new VirtualRegister(currentSegment, Scope.intType);
+        VirtualRegister len = new VirtualRegister(currentSegment, Scope.intType);
+        currentBlock.addInst(new LoadInstruction(IRInstruction.op.LOAD, len1, r1, 0, Scope.intType));
+        currentBlock.addInst(new LoadInstruction(IRInstruction.op.LOAD, len2, r2, 0, Scope.intType));
+        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, len, len1, "+", len2));
+        //length plus 4
+        VirtualRegister len_plus_4 = new VirtualRegister(currentSegment, Scope.intType);
+        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, len_plus_4, len, "+", 4));
+        VirtualRegister tmp = new VirtualRegister(currentSegment, Scope.intType);
+        //malloc len + 4
+        currentBlock.addInst(new MallocInstruction(IRInstruction.op.MALLOC, tmp, len_plus_4));
+        //write len
+        currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, tmp, 0, len, Scope.intType));
+        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, tmp, tmp, "+", 4));
+        BasicBlock bb = currentBlock.split();
+        */
+    }
+
+    private void fullfillStringCmp() {
+
+    }
+
     @Override
     public void visit(ProgramNode node) {
         constantPoolTable = new ConstantPoolTable();
@@ -42,6 +77,9 @@ public class IRBuilder extends ASTVisitor {
         typeMap.forEach((name, type) -> {
             type.setWidth();
         });
+
+        stringAdd = new CodeSegment(null);
+        stringCmp = new CodeSegment(null);
 
         //set class member's offset and
         //create all code segments and its parameters' virtual registers for all class methods
@@ -111,7 +149,7 @@ public class IRBuilder extends ASTVisitor {
     }
 
     public void ComputExprValue(ExpressionNode node) {
-        VirtualRegister vn;
+        VirtualRegister vn = null;
         switch (node.getType()) {
             case THIS:
                 vn = new VirtualRegister(currentSegment, Scope.intType);
@@ -203,130 +241,198 @@ public class IRBuilder extends ASTVisitor {
                 node.setVirtualRegister(vn);
                 break;
             case CALL:
-                node.getCallExpr().setScope(node.getScope());
-                node.getCallExpr().accept(this);
-                assert node.getCallExpr().isFunction();
                 FunctionSymbol func = node.getCallExpr().getFuncSymbol();
-                List<Type> list1 = func.getParameters();
-                Iterator<Type> it = list1.iterator();
-                assert list1.size() == node.getCallExprList().size();
+                List<VirtualRegister> list = new ArrayList<>();
+                if (func.getScope() != globalScope)
+                    list.add(node.getCallExpr().getVirtualRegister());
                 for (ExpressionNode ex : node.getCallExprList()) {
-                    ex.setScope(node.getScope());
-                    ex.accept(this);
-                    Type rec = it.next();
-                    assert rec.isSameTypeOf(ex.getExprType())
-                            || ((rec instanceof ArrayType || rec instanceof ClassType)
-                            && ex.getExprType() == Scope.nullType);
+                    ComputExprValue(ex);
+                    list.add(ex.getVirtualRegister());
                 }
-                node.setExprType(func.getType());
+                vn = new VirtualRegister(currentSegment, node.getExprType());
+                currentBlock.addInst(new CallInstruction(IRInstruction.op.CALL, vn, node.getExprType(), func.getCodeSegment(), list));
+                node.setVirtualRegister(vn);
                 break;
             case NEW:
+                //TODO: gp
                 node.getCreator().setScope(node.getScope());
                 node.getCreator().accept(this);
                 node.setExprType(node.getCreator().getExprType());
                 break;
             case POST:
-                node.getPostExpr().setScope(node.getScope());
-                node.getPostExpr().accept(this);
-                assert Scope.intType.isSameTypeOf(node.getPostExpr().getExprType());
-                assert node.getPreExpr().isLeftValue();
-                node.setExprType(Scope.intType);
+                ComputExprAddr(node.getPostExpr());
+                VirtualRegister addr = node.getPostExpr().getVirtualRegister();
+                vn = new VirtualRegister(currentSegment, Scope.intType);
+                currentBlock.addInst(new LoadInstruction(IRInstruction.op.LOAD, vn, addr, 0, Scope.intType));
+                VirtualRegister res = new VirtualRegister(currentSegment, Scope.intType);
                 switch (node.getOp()) {
                     case "++":
+                        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, res, vn, "+", 1));
                         break;
                     case "--":
+                        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, res, vn, "-", 1));
                         break;
                 }
+                currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, addr, 0, res, Scope.intType));
+                node.setVirtualRegister(vn);
                 break;
             case PRE:
-                node.getPreExpr().setScope(node.getScope());
-                node.getPreExpr().accept(this);
                 switch (node.getOp()) {
                     case "++":
                     case "--":
-                        assert node.getPreExpr().isLeftValue();
-                        assert Scope.intType.isSameTypeOf(node.getPostExpr().getExprType());
-                        node.setExprType(Scope.intType);
-                        node.setIsLeftValue(true);
+                        ComputExprAddr(node.getPreExpr());
+                        VirtualRegister address = node.getPreExpr().getVirtualRegister();
+                        VirtualRegister num = new VirtualRegister(currentSegment, Scope.intType);
+                        currentBlock.addInst(new LoadInstruction(IRInstruction.op.LOAD, num, address, 0, Scope.intType));
+                        vn = new VirtualRegister(currentSegment, Scope.intType);
+                        if (node.getOp().equals("++"))
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, num, "+", 1));
+                        else
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, num, "-", 1));
+                        currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, address, 0, vn, Scope.intType));
+                        node.setVirtualRegister(vn);
                         break;
                     case "+":
                     case "-":
                     case "~":
-                        assert Scope.intType.isSameTypeOf(node.getPostExpr().getExprType());
-                        node.setExprType(Scope.intType);
+                        ComputExprValue(node.getPreExpr());
+                        VirtualRegister num2 = node.getPreExpr().getVirtualRegister();
+                        if (node.getOp().equals("+"))
+                            node.setVirtualRegister(num2);
+                        else if (node.getOp().equals("-")) {
+                            vn = new VirtualRegister(currentSegment, Scope.intType);
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, null, "-", num2));
+                            node.setVirtualRegister(vn);
+                        } else {
+                            vn = new VirtualRegister(currentSegment, Scope.intType);
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, num2, "^", -1));
+                            node.setVirtualRegister(vn);
+                        }
                         break;
                     case "!":
-                        assert Scope.boolType.isSameTypeOf(node.getPostExpr().getExprType());
-                        node.setExprType(Scope.boolType);
+                        ComputExprValue(node.getPreExpr());
+                        VirtualRegister bool_res = node.getPreExpr().getVirtualRegister();
+                        vn = new VirtualRegister(currentSegment, Scope.boolType);
+                        BasicBlock bb1 = currentBlock.split();
+                        BasicBlock bb2 = bb1.split();
+                        BasicBlock bb3 = bb2.split();
+                        currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, bool_res, true, bb2));
+                        bb1.addInst(new CopyInstruction(IRInstruction.op.COPY, vn, 1));
+                        bb1.addInst(new JumpInstruction(IRInstruction.op.JUMP, bb3));
+                        bb2.addInst(new CopyInstruction(IRInstruction.op.COPY, vn, 0));//NOTICE: not SSA!!
+                        currentBlock = bb3;
+                        node.setVirtualRegister(vn);
                         break;
                 }
                 break;
             case BINARY:
-                node.getBinaryExpr1().setScope(node.getScope());
-                node.getBinaryExpr1().accept(this);
-                node.getBinaryExpr2().setScope(node.getScope());
-                node.getBinaryExpr2().accept(this);
+                VirtualRegister r1 = null, r2 = null;
+                if (!node.getOp().equals("&&") && !node.getOp().equals("||")) {
+                    if (node.getOp().equals("=")) {
+                        ComputExprAddr(node.getBinaryExpr1());
+                        ComputExprValue(node.getBinaryExpr2());
+                        r1 = node.getBinaryExpr1().getVirtualRegister();
+                        r2 = node.getBinaryExpr2().getVirtualRegister();
+                    } else {
+                        ComputExprValue(node.getBinaryExpr1());
+                        ComputExprValue(node.getBinaryExpr2());
+                        r1 = node.getBinaryExpr1().getVirtualRegister();
+                        r2 = node.getBinaryExpr2().getVirtualRegister();
+                    }
+                }
                 switch (node.getOp()) {
                     case "+":
-                        assert node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        assert Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())
-                                || Scope.stringType.isSameTypeOf(node.getBinaryExpr1().getExprType());
-                        node.setExprType(node.getBinaryExpr1().getExprType());
+                        if (Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
+                            vn = new VirtualRegister(currentSegment, Scope.intType);
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, r1, "+", r2));
+                        } else {
+                            vn = new VirtualRegister(currentSegment, Scope.intType);
+                            List<VirtualRegister> li = new ArrayList<>();
+                            li.add(r1); li.add(r2);
+                            currentBlock.addInst(new CallInstruction(IRInstruction.op.CALL, vn, Scope.intType, stringAdd, li));
+                        }
                         break;
                     case "<=": case ">=": case "<": case ">":
-                        assert node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        assert Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())
-                                || Scope.stringType.isSameTypeOf(node.getBinaryExpr1().getExprType());
-                        node.setExprType(Scope.boolType);
+                        if (Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
+                            vn = new VirtualRegister(currentSegment, Scope.boolType);
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, r1, node.getOp(), r2));
+                        } else {
+                            VirtualRegister result = new VirtualRegister(currentSegment, Scope.intType);
+                            vn = new VirtualRegister(currentSegment, Scope.boolType);
+                            List<VirtualRegister> li = new ArrayList<>();
+                            li.add(r1); li.add(r2);
+                            currentBlock.addInst(new CallInstruction(IRInstruction.op.CALL, result, Scope.intType, stringCmp, li));
+                            if (node.getOp().equals("<=")) {
+                                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, result, "<=", 0));
+                            } else if (node.getOp().equals(">=")) {
+                                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, result, ">=", 0));
+                            } else if (node.getOp().equals("<")) {
+                                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, result, "<", 0));
+                            } else {
+                                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, result, ">", 0));
+                            }
+                        }
                         break;
                     case "-": case "*": case "/": case "%": case "<<": case ">>":  case "&": case "^": case "|":
-                        assert Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType());
-                        assert Scope.intType.isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        node.setExprType(Scope.intType);
+                        vn = new VirtualRegister(currentSegment, Scope.intType);
+                        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, r1, node.getOp(), r2));
                         break;
                     case "&&": case "||":
-                        assert Scope.boolType.isSameTypeOf(node.getBinaryExpr1().getExprType());
-                        assert Scope.boolType.isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        node.setExprType(Scope.boolType);
+                        ComputExprValue(node.getBinaryExpr1());
+                        r1 = node.getBinaryExpr1().getVirtualRegister();
+                        BasicBlock bb1 = currentBlock.split();
+                        BasicBlock bb2 = bb1.split();
+                        BasicBlock bb3 = bb2.split();
+                        BasicBlock bb4 = bb3.split();
+                        if (node.getOp().equals("&&")) {
+                            currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, r1, false, bb3));
+                            currentBlock = bb1;
+                            ComputExprValue(node.getBinaryExpr2());
+                            r2 = node.getBinaryExpr2().getVirtualRegister();
+                            currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, r2, false, bb3));
+                            vn = new VirtualRegister(currentSegment, Scope.boolType);
+                            bb2.addInst(new CopyInstruction(IRInstruction.op.COPY, vn, 1));
+                            bb2.addInst(new JumpInstruction(IRInstruction.op.JUMP, bb4));
+                            bb3.addInst(new CopyInstruction(IRInstruction.op.COPY, vn, 0));
+                            currentBlock = bb4;//not SSA!
+                        } else {
+                            currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, r1, true, bb3));
+                            currentBlock = bb1;
+                            ComputExprValue(node.getBinaryExpr2());
+                            r2 = node.getBinaryExpr2().getVirtualRegister();
+                            currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, r2, true, bb3));
+                            vn = new VirtualRegister(currentSegment, Scope.boolType);
+                            bb2.addInst(new CopyInstruction(IRInstruction.op.COPY, vn, 0));
+                            bb2.addInst(new JumpInstruction(IRInstruction.op.JUMP, bb4));
+                            bb3.addInst(new CopyInstruction(IRInstruction.op.COPY, vn, 1));
+                            currentBlock = bb4;//not SSA!
+                        }
                         break;
                     case "==": case "!=":
-                        if (node.getBinaryExpr1().getExprType() instanceof ArrayType) {
-                            assert node.getBinaryExpr2().getExprType() == Scope.nullType
-                                    || node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        } else if (node.getBinaryExpr1().getExprType() instanceof ClassType) {
-                            assert node.getBinaryExpr2().getExprType() == Scope.nullType
-                                    || node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        } else if (node.getBinaryExpr1().getExprType() == Scope.nullType) {
-                            assert node.getBinaryExpr2().getExprType() == Scope.nullType
-                                    || node.getBinaryExpr2().getExprType() instanceof ArrayType
-                                    || node.getBinaryExpr2().getExprType() instanceof ClassType;
+                        if (Scope.stringType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
+                            VirtualRegister result = new VirtualRegister(currentSegment, Scope.intType);
+                            vn = new VirtualRegister(currentSegment, Scope.boolType);
+                            List<VirtualRegister> li = new ArrayList<>();
+                            li.add(r1); li.add(r2);
+                            currentBlock.addInst(new CallInstruction(IRInstruction.op.CALL, result, Scope.intType, stringCmp, li));
+                            if (node.getOp().equals("==")) {
+                                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, result, "==", 0));
+                            } else {
+                                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, result, "!=", 0));
+                            }
                         } else {
-                            assert Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())
-                                    || Scope.boolType.isSameTypeOf(node.getBinaryExpr1().getExprType())
-                                    || Scope.stringType.isSameTypeOf(node.getBinaryExpr1().getExprType());
-                            assert node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType());
+                            vn = new VirtualRegister(currentSegment, Scope.boolType);
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, r1, node.getOp(), r2));
                         }
-                        node.setExprType(Scope.boolType);
                         break;
                     case "=":
-                        assert node.getBinaryExpr1().isLeftValue();
-                        if (Scope.intType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
-                            assert Scope.intType.isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        } else if (Scope.boolType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
-                            assert Scope.boolType.isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        } else if (Scope.stringType.isSameTypeOf(node.getBinaryExpr1().getExprType())) {
-                            assert Scope.stringType.isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        } else {
-                            assert node.getBinaryExpr1().getExprType().isSameTypeOf(node.getBinaryExpr2().getExprType())
-                                    || Scope.nullType.isSameTypeOf(node.getBinaryExpr2().getExprType());
-                        }
-                        node.setExprType(node.getBinaryExpr1().getExprType());
-                        node.setIsLeftValue(node.getBinaryExpr1().isLeftValue());
+                        currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, r1, 0, r2, node.getBinaryExpr1().getExprType()));
+                        vn = r2;
                         break;
                 }
+                node.setVirtualRegister(vn);
                 break;
         }
-
     }
 
     public void ComputExprAddr(ExpressionNode node) {

@@ -9,6 +9,8 @@ public class BasicBlock {
     private CodeSegment enclosureCodeSegment;
     private List<StatementNode> stmtList;
     private List<IRInstruction> instList;
+    private BasicBlock pre;
+    private BasicBlock pos;
     private List<BasicBlock> pred;
     private List<BasicBlock> post;
 
@@ -18,6 +20,16 @@ public class BasicBlock {
         this.instList = new ArrayList<>();
         this.pred = new ArrayList<>();
         this.post = new ArrayList<>();
+        this.pre = null;
+        this.pos = null;
+    }
+
+    public BasicBlock split() {
+        BasicBlock nb = new BasicBlock(enclosureCodeSegment);
+        nb.pos = this.pos;
+        nb.pre = this;
+        this.pos = nb;
+        return nb;
     }
 
     public CodeSegment getEnclosureCodeSegment() {
@@ -50,9 +62,11 @@ public class BasicBlock {
 
     public void addPred(BasicBlock a) {
         pred.add(a);
+        if (a != null) a.post.add(this);
     }
 
     public void addPost(BasicBlock a) {
         post.add(a);
+        if (a != null) a.pred.add(this);
     }
 }
