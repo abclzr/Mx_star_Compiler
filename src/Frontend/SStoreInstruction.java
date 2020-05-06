@@ -11,7 +11,7 @@ public class SStoreInstruction extends IRInstruction {
         super(o);
         assert o == IRInstruction.op.SSTORE;
         this.offset = addr;
-        this.value = b;
+        this.value = b;//maybe zero!
         width = tp.getWidth();
     }
 }

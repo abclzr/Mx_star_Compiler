@@ -27,6 +27,10 @@ public class CodeSegment {
         thisPointer = null;
     }
 
+    public FunctionSymbol getFunctionSymbol() {
+        return functionSymbol;
+    }
+
     public int Allocate(int width) {
         stackStorage += width;
         return stackStorage - width;

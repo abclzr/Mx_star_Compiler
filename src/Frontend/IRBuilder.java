@@ -3,6 +3,7 @@ package Frontend;
 import AST.*;
 import Semantic.*;
 import Utils.SemanticError;
+import com.sun.source.tree.NewArrayTree;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,9 +17,6 @@ public class IRBuilder extends ASTVisitor {
     private List<CodeSegment> segmentList;
     private CodeSegment currentSegment;
     private BasicBlock currentBlock;
-    private VirtualRegister sp;
-    private VirtualRegister startsp;
-    private VirtualRegister ap;
     private List<CopyInstruction> constPoolWriteBack;
     private CodeSegment stringAdd;
     private CodeSegment stringCmp;
@@ -97,6 +95,7 @@ public class IRBuilder extends ASTVisitor {
                 //create all code segments and its parameters' virtual registers for all class methods
                 ((ClassDeclNode) x).getMethodDeclNodeList().forEach(y -> {
                     CodeSegment cs = new CodeSegment(y.getFuncSymbol());
+                    segmentList.add(cs);
                     //constructor has no parameters
                     if (!y.isConstructor()) {
                         cs.setThisPointer(new VirtualRegister(cs, ((ClassDeclNode) x).getClassType()));
@@ -104,6 +103,8 @@ public class IRBuilder extends ASTVisitor {
                             VariableSymbol var = y.getFuncSymbol().getScope().findVarInScope(z.getIdentifier(), null);
                             var.setVirtualRegister(new VirtualRegister(cs, Type.getType(z.getType())));
                         });
+                    } else {
+                        ((ClassDeclNode) x).getClassType().setCreator(cs);
                     }
                 });
             }
@@ -114,6 +115,7 @@ public class IRBuilder extends ASTVisitor {
             if (x instanceof FuncDeclNode) {
                 FunctionSymbol func = ((FuncDeclNode) x).getFunctionSymbol();
                 CodeSegment cs = new CodeSegment(func);
+                segmentList.add(cs);
                 ((FuncDeclNode) x).getParameterList().forEach(y -> {
                     VariableSymbol var = func.getScope().findVarInScope(y.getIdentifier(), null);
                     var.setVirtualRegister(new VirtualRegister(cs, Type.getType(y.getType())));
@@ -136,16 +138,148 @@ public class IRBuilder extends ASTVisitor {
                         ComputExprValue(y.getExpr());
                         VirtualRegister nv = new VirtualRegister(globalVarSegment, type);
                         y.getVariableSymbol().setVirtualRegister(nv);
-                        //TODO : check copy instruction
-                        globalVarSegment.getHeadBlock().addInst(new CopyInstruction(IRInstruction.op.COPY, nv, y.getExpr().getVirtualRegister()));
+                        currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, nv, y.getExpr().getVirtualRegister()));
                     }
                 });
             }
         });
-        sp = new VirtualRegister(globalVarSegment, Scope.intType);
-        ap = new VirtualRegister(globalVarSegment, Scope.intType);
 
+        segmentList.forEach(cs -> {
+            if (cs.getFunctionSymbol().getType() == null) {
+                currentSegment = cs;
+                currentBlock = cs.getHeadBlock();
+                CollectStmt(cs.getFunctionSymbol().getBlockContext().getStatementList(), null, null);
+            } else {
 
+            }
+        });
+    }
+    void CollectStmt(StatementNode blockNode, BasicBlock continueBlock, BasicBlock breakBlock) {
+        List<StatementNode> blockNodeList = new ArrayList<>();
+        blockNodeList.add(blockNode);
+        CollectStmt(blockNodeList, continueBlock, breakBlock);
+    }
+
+    void CollectStmt(List<StatementNode> blockNodeList, BasicBlock continueBlock, BasicBlock breakBlock) {
+        for (StatementNode node : blockNodeList) {
+                switch (node.getStmtType()) {
+                    case BLOCK:
+                        CollectStmt(node.getBlockStmtList(), continueBlock, breakBlock);
+                        break;
+                    case IF:
+                        ComputExprValue(node.getIfExpr());
+                        VirtualRegister ifExpr = node.getIfExpr().getVirtualRegister();
+                        BasicBlock bb1 = currentBlock.split();
+                        BasicBlock bb2 = bb1.split();
+                        currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, ifExpr, false, bb2));
+                        currentBlock = bb1;
+                        CollectStmt(node.getIfStmt1(), continueBlock, breakBlock);
+                        if (node.getIfStmt2() == null) {
+                            currentBlock = bb2;
+                        } else {
+                            BasicBlock bb3 = bb2.split();
+                            currentBlock.addInst(new JumpInstruction(IRInstruction.op.JUMP, bb3));
+                            currentBlock = bb2;
+                            CollectStmt(node.getIfStmt2(), continueBlock, breakBlock);
+                            currentBlock = bb3;
+                        }
+                        break;
+                    case FOR:
+                        BasicBlock forCond = currentBlock.split();
+                        BasicBlock forBody = forCond.split();
+                        BasicBlock forUpdate = forBody.split();
+                        BasicBlock forAfter = forUpdate.split();
+                        ComputExprValue(node.getForControl().getInitialExpr());
+                        currentBlock = forCond;
+                        ComputExprValue(node.getForControl().getConditionExpr());
+                        VirtualRegister fC = node.getForControl().getConditionExpr().getVirtualRegister();
+                        currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, fC, false, forAfter));
+                        currentBlock = forBody;
+                        CollectStmt(node.getForStatement().getBlockStmtList(), forUpdate, forAfter);
+                        currentBlock = forUpdate;
+                        ComputExprValue(node.getForControl().getUpdateExpr());
+                        currentBlock.addInst(new JumpInstruction(IRInstruction.op.JUMP, forCond));
+                        currentBlock = forAfter;
+                        break;
+                    case WHILE:
+                        BasicBlock whileCond = currentBlock.split();
+                        BasicBlock whileBody = whileCond.split();
+                        BasicBlock whileAfter = whileBody.split();
+                        currentBlock = whileCond;
+                        ComputExprValue(node.getWhileExpr());
+                        VirtualRegister wC = node.getWhileExpr().getVirtualRegister();
+                        currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, wC, false, whileAfter));
+                        currentBlock = whileBody;
+                        CollectStmt(node.getWhileStmt().getBlockStmtList(), whileCond, whileAfter);
+                        currentBlock.addInst(new JumpInstruction(IRInstruction.op.JUMP, whileCond));
+                        currentBlock = whileAfter;
+                        break;
+                    case RETURN:
+                        if (node.getReturnExpr() != null) {
+                            ComputExprValue(node.getReturnExpr());
+                            VirtualRegister returnValue = node.getReturnExpr().getVirtualRegister();
+                            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, returnValue));
+                        } else {
+                            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, null));
+                        }
+                    case BREAK:
+                        currentBlock.addInst(new JumpInstruction(IRInstruction.op.JUMP, breakBlock));
+                        break;
+                    case CONTINUE:
+                        currentBlock.addInst(new JumpInstruction(IRInstruction.op.JUMP, continueBlock));
+                        break;
+                    case EXPR:
+                        ComputExprValue(node.getExpr());
+                        break;
+                    case VARDECL:
+                        Type type = Type.getType(node.getVarDecl().getType());
+                        node.getVarDecl().getVarDecoratorList().forEach(v -> {
+                            VirtualRegister vn = new VirtualRegister(currentSegment, type);
+                            v.getVariableSymbol().setVirtualRegister(vn);
+                            if (v.getExpr() != null) {
+                                ComputExprValue(v.getExpr());
+                                VirtualRegister vv = v.getExpr().getVirtualRegister();
+                                currentBlock.addInst(new SStoreInstruction(IRInstruction.op.SSTORE, vn.getAddr(), vv, type));
+                            } else
+                                currentBlock.addInst(new SStoreInstruction(IRInstruction.op.SSTORE, vn.getAddr(), null, type));
+                        });
+                        break;
+                }
+        }
+    }
+
+    public VirtualRegister NewArray(List<VirtualRegister> list, int dimension, int tmp, int listSize, Type tp) {
+        if (tmp > listSize) {
+            VirtualRegister rt = new VirtualRegister(currentSegment, tp);
+            if (tp.isClassType()) {
+                CodeSegment creator = ((ClassType) tp).getCreator();
+                currentBlock.addInst(new CallInstruction(IRInstruction.op.CALL, rt, Scope.intType, creator, new ArrayList<>()));
+            } else {
+                currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, rt, 0));
+            }
+            return rt;
+        }
+
+        Type ctxType =  ((ArrayType) tp).getDimensionMinusOne();
+        VirtualRegister len = list.get(tmp - 1);
+        VirtualRegister malloc_size = new VirtualRegister(currentSegment, Scope.intType);
+        VirtualRegister jump_size = new VirtualRegister(currentSegment, Scope.intType);
+        currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, jump_size, ctxType.getWidth()));
+        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, malloc_size, len, "*", jump_size));
+        VirtualRegister rt = new VirtualRegister(currentSegment, Scope.intType);
+        currentBlock.addInst(new MallocInstruction(IRInstruction.op.MALLOC, rt, malloc_size));
+        VirtualRegister pointer = new VirtualRegister(currentSegment, Scope.intType);
+        currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, pointer, rt));
+        VirtualRegister endPointer = new VirtualRegister(currentSegment, Scope.intType);
+        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, endPointer, pointer, "+", malloc_size));
+        currentBlock = currentBlock.split();
+        BasicBlock loopBlock = currentBlock;
+        VirtualRegister ctx = NewArray(list, dimension, tmp + 1, listSize, ctxType);
+        currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, pointer, 0, ctx, ctxType));
+        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, pointer, pointer, "+", jump_size));
+        currentBlock.addInst(new BranchInstruction(IRInstruction.op.BRANCH, pointer, "<", endPointer, loopBlock));
+        currentBlock = currentBlock.split();
+        return rt;
     }
 
     public void ComputExprValue(ExpressionNode node) {
@@ -254,10 +388,21 @@ public class IRBuilder extends ASTVisitor {
                 node.setVirtualRegister(vn);
                 break;
             case NEW:
-                //TODO: gp
-                node.getCreator().setScope(node.getScope());
-                node.getCreator().accept(this);
-                node.setExprType(node.getCreator().getExprType());
+                CreatorNode cr = node.getCreator();
+                List<VirtualRegister> lis = new ArrayList<>();
+                cr.getExpr().forEach(x -> {
+                    ComputExprValue(x);
+                    lis.add(x.getVirtualRegister());
+                });
+                if (cr.getExprType().isArrayType()) {
+                    vn = NewArray(lis, cr.getDimension(), 1, lis.size(), cr.getExprType());
+                } else {
+                    //assert class type
+                    CodeSegment creator = ((ClassType) cr.getExprType()).getCreator();
+                    vn = new VirtualRegister(currentSegment, Scope.intType);
+                    currentBlock.addInst(new CallInstruction(IRInstruction.op.CALL, vn, Scope.intType, creator, new ArrayList<>()));
+                }
+                node.setVirtualRegister(vn);
                 break;
             case POST:
                 ComputExprAddr(node.getPostExpr());
@@ -436,7 +581,140 @@ public class IRBuilder extends ASTVisitor {
     }
 
     public void ComputExprAddr(ExpressionNode node) {
+        VirtualRegister vn = null;
+        switch (node.getType()) {
+            case THIS:
+                break;
+            case LITERAL:
+                switch (node.getLiteralNode().getLiteralType()) {
+                    case STRING:
+                        break;
+                    case INT:
+                        break;
+                    case BOOL:
+                        break;
+                    case NULL:
+                        break;
+                }
+                break;
+            case IDENTIFIER:
+                if (!node.isFunction()) {
+                    assert node.isLeftValue();
+                    VariableSymbol var = node.getScope().findVar(node.getIdentifier(), node.getPosition());
+                    VirtualRegister varReg = var.getVirtualRegister();
+                    Address offset = varReg.getAddr();
+                    vn = new VirtualRegister(currentSegment, var.getType());
+                    if (varReg.getInCodeSegment() == globalVarSegment) {
+                        currentBlock.addInst(new GAddInstruction(IRInstruction.op.GLOAD, vn, offset, var.getType()));
+                        node.setVirtualRegister(vn);
+                    } else {
+                        currentBlock.addInst(new SAddInstruction(IRInstruction.op.SLOAD, vn, offset, var.getType()));
+                        node.setVirtualRegister(vn);
+                    }
+                } else {
+                    FunctionSymbol func = node.getScope().findFunc(node.getIdentifier(), node.getPosition());
+                    node.setFuncPointer(func.getCodeSegment());
+                }
+                break;
+            case MEMBER:
+                ComputExprValue(node.getMemberExpr());
+                VirtualRegister c = node.getMemberExpr().getVirtualRegister();
+                Type t = node.getMemberExpr().getExprType();
+                Scope classScope;
+                if (t instanceof ClassType) classScope = ((ClassType) t).getScope();
+                else if (t instanceof ArrayType) classScope = ArrayType.getScope();
+                else classScope = ((PrimitiveType) t).getScope();
 
+                if (node.isFunction()) {
+                    FunctionSymbol fs = classScope.findFuncInScope(node.getIdentifier(), node.getPosition());
+                    node.setFuncPointer(fs.getCodeSegment());
+                    node.setVirtualRegister(c);
+                } else {
+                    VariableSymbol vs = classScope.findVarInScope(node.getIdentifier(), node.getPosition());
+                    vn = new VirtualRegister(currentSegment, vs.getType());
+                    VirtualRegister offset = new VirtualRegister(currentSegment, Scope.intType);
+                    currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, offset, vs.getOffsetInClass()));
+                    currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, c, "+", offset));
+                    node.setVirtualRegister(vn);
+                }
+                break;
+            case ARRAY:
+                ComputExprValue(node.getArrayExprBefore());
+                ComputExprValue(node.getArrayExprAfter());
+                VirtualRegister bef = node.getArrayExprBefore().getVirtualRegister();
+                VirtualRegister aft = node.getArrayExprAfter().getVirtualRegister();
+                int a = node.getExprType().getWidth();
+                VirtualRegister off = new VirtualRegister(currentSegment, Scope.intType);
+                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, off, aft, "*", a));
+                VirtualRegister off2 = new VirtualRegister(currentSegment, Scope.intType);
+                currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, off2, bef, "+", off));
+                vn = off2;
+                node.setVirtualRegister(vn);
+                break;
+            case CALL:
+                break;
+            case NEW:
+                break;
+            case POST:
+                break;
+            case PRE:
+                switch (node.getOp()) {
+                    case "++":
+                    case "--":
+                        ComputExprAddr(node.getPreExpr());
+                        VirtualRegister address = node.getPreExpr().getVirtualRegister();
+                        VirtualRegister num = new VirtualRegister(currentSegment, Scope.intType);
+                        currentBlock.addInst(new LoadInstruction(IRInstruction.op.LOAD, num, address, 0, Scope.intType));
+                        vn = new VirtualRegister(currentSegment, Scope.intType);
+                        if (node.getOp().equals("++"))
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, num, "+", 1));
+                        else
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, num, "-", 1));
+                        currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, address, 0, vn, Scope.intType));
+                        node.setVirtualRegister(address);
+                        break;
+                    case "+":
+                    case "-":
+                    case "~":
+                        break;
+                    case "!":
+                        break;
+                }
+                break;
+            case BINARY:
+                VirtualRegister r1 = null, r2 = null;
+                if (!node.getOp().equals("&&") && !node.getOp().equals("||")) {
+                    if (node.getOp().equals("=")) {
+                        ComputExprAddr(node.getBinaryExpr1());
+                        ComputExprValue(node.getBinaryExpr2());
+                        r1 = node.getBinaryExpr1().getVirtualRegister();
+                        r2 = node.getBinaryExpr2().getVirtualRegister();
+                    } else {
+                        ComputExprValue(node.getBinaryExpr1());
+                        ComputExprValue(node.getBinaryExpr2());
+                        r1 = node.getBinaryExpr1().getVirtualRegister();
+                        r2 = node.getBinaryExpr2().getVirtualRegister();
+                    }
+                }
+                switch (node.getOp()) {
+                    case "+":
+                        break;
+                    case "<=": case ">=": case "<": case ">":
+                        break;
+                    case "-": case "*": case "/": case "%": case "<<": case ">>":  case "&": case "^": case "|":
+                        break;
+                    case "&&": case "||":
+                        break;
+                    case "==": case "!=":
+                        break;
+                    case "=":
+                        currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, r1, 0, r2, node.getBinaryExpr1().getExprType()));
+                        vn = r1;
+                        break;
+                }
+                node.setVirtualRegister(vn);
+                break;
+        }
     }
 
     @Override
