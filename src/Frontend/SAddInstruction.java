@@ -22,4 +22,9 @@ public class SAddInstruction extends IRInstruction {
         this.offset.setAddr(addr);
         this.width = tp.getWidth();
     }
+
+    @Override
+    public String getMessage() {
+        return ("Op "  + lhs.getName() + " = sp + " + offset.getAddr() + " (" + width + " byte)");
+    }
 }

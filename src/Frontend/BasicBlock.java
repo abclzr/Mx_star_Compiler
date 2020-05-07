@@ -13,6 +13,15 @@ public class BasicBlock {
     private BasicBlock pos;
     private List<BasicBlock> pred;
     private List<BasicBlock> post;
+    private int id;
+
+    public BasicBlock getPos() {
+        return pos;
+    }
+
+    public BasicBlock getPre() {
+        return pre;
+    }
 
     public BasicBlock(CodeSegment fa) {
         this.enclosureCodeSegment = fa;
@@ -22,6 +31,7 @@ public class BasicBlock {
         this.post = new ArrayList<>();
         this.pre = null;
         this.pos = null;
+        this.id = fa.getBBNum();
     }
 
     public BasicBlock split() {
@@ -68,5 +78,16 @@ public class BasicBlock {
     public void addPost(BasicBlock a) {
         post.add(a);
         if (a != null) a.pred.add(this);
+    }
+
+    public String getName() {
+        return "Label " + this.id + ":";
+    }
+
+    public void printall() {
+        System.out.println("\t" + getName());
+        instList.forEach(x -> {
+            System.out.println("\t\t" + x.getMessage());
+        });
     }
 }

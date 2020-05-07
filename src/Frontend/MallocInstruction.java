@@ -19,4 +19,12 @@ public class MallocInstruction extends IRInstruction {
         this.malloc_size_int = ms;
         this.is_class_malloc = true;
     }
+
+    @Override
+    public String getMessage() {
+        if (this.is_class_malloc)
+            return (start_addr.getName() + " = malloc(" + malloc_size_int + ")");
+        else
+            return (start_addr.getName() + " = malloc(" + malloc_size.getName() + ")");
+    }
 }

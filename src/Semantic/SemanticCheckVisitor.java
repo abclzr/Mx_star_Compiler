@@ -422,7 +422,9 @@ public class SemanticCheckVisitor extends ASTVisitor {
                     assert dec.getExpr().getExprType() == Scope.nullType
                             || type.isSameTypeOf(dec.getExpr().getExprType());
             }
-            node.getScope().addVariable(new VariableSymbol(type, dec.getIdentifier(), dec, dec.getPosition()));
+            VariableSymbol vs = new VariableSymbol(type, dec.getIdentifier(), dec, dec.getPosition());
+            node.getScope().addVariable(vs);
+            dec.setVariableSymbol(vs);
         });
     }//done
 

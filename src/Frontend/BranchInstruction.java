@@ -13,4 +13,9 @@ public class BranchInstruction extends IRInstruction {
         this.r2 = r2;
         this.toBB = toBB;
     }
+
+    @Override
+    public String getMessage() {
+        return "if (" + r1.getName() + " " + bop + " " + r2.getName() + ") go to " + toBB.getName();
+    }
 }

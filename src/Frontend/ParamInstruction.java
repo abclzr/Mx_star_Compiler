@@ -5,4 +5,9 @@ public class ParamInstruction extends IRInstruction {
         super(o);
         assert o == op.PARAM;
     }
+
+    @Override
+    public String getMessage() {
+        return null;
+    }
 }

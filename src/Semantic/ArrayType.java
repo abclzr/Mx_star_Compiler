@@ -36,7 +36,7 @@ public class ArrayType extends Type {
 
     public Type getDimensionMinusOne() {
         if (dimension > 1)
-            return new ArrayType(super.getTypeName(), this.type, this.dimension);
+            return new ArrayType(super.getTypeName(), this.type, this.dimension - 1);
         else
             return this.type;
     }

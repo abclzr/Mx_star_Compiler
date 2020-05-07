@@ -14,4 +14,9 @@ public class GAddInstruction extends IRInstruction {
         this.offset = addr;
         this.width = tp.getWidth();
     }
+
+    @Override
+    public String getMessage() {
+        return ("Op "  + lhs.getName() + " = bottom_stack_pointer + " + offset + " (" + width + " byte)");
+    }
 }

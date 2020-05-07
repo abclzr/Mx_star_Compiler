@@ -26,4 +26,12 @@ public class BinaryInstruction extends IRInstruction {
         assert o == op.BINARY;
         this.is_imm = true;
     }
+
+    @Override
+    public String getMessage() {
+        if (is_imm)
+            return lhs.getName() + " = " + rhs1.getName() + " " + bop + " " + imm_rhs2;
+        else
+            return lhs.getName() + " = " + rhs1.getName() + " " + bop + " " + rhs2.getName();
+    }
 }

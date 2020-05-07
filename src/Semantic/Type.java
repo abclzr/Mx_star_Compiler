@@ -11,6 +11,7 @@ public abstract class Type {
     public abstract void setWidth();
 
     public int getWidth() {
+        if (this instanceof ArrayType) return 4;
         return width;
     }
     public abstract int getAllocWidth();

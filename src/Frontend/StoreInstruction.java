@@ -15,4 +15,9 @@ public class StoreInstruction extends IRInstruction {
         this.value = b;
         width = tp.getWidth();
     }
+
+    @Override
+    public String getMessage() {
+        return ("Store "  + addr.getName() + " + " + offset + ", " + value.getName() + " (" + width + " byte)");
+    }
 }

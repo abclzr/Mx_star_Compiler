@@ -6,9 +6,8 @@ import Frontend.IRBuilder;
 import Parser.MxErrorListener;
 import Parser.MxParser;
 import Parser.MxLexer;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+
+import java.io.*;
 
 import Semantic.ClassAndFuncVisitor;
 import Semantic.ClassMemberVisitor;
@@ -48,8 +47,11 @@ public class Main {
             new ClassMemberVisitor(globalScope).visit((ProgramNode) root);
             new SemanticCheckVisitor(globalScope).visit((ProgramNode) root);
 
+            PrintStream ps = new PrintStream(new FileOutputStream("test.ir"));
+            System.setOut(ps);
             IRBuilder irBuilder = new IRBuilder(globalScope);
             irBuilder.visit((ProgramNode) root);
+            irBuilder.printall();
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());

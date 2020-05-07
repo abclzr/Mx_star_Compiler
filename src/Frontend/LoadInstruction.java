@@ -15,4 +15,9 @@ public class LoadInstruction extends IRInstruction {
         this.offset = addr;
         this.width = tp.getWidth();
     }
+
+    @Override
+    public String getMessage() {
+        return ("Load "  + lhs.getName() + ", " + rhs.getName() + " + " + offset + " (" + width + " byte)");
+    }
 }

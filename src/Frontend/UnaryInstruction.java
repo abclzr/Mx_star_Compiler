@@ -5,4 +5,9 @@ public class UnaryInstruction extends IRInstruction {
         super(o);
         assert o == op.UNARY;
     }
+
+    @Override
+    public String getMessage() {
+        return null;
+    }
 }

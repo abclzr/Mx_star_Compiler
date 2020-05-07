@@ -22,4 +22,9 @@ public class SLoadInstruction extends IRInstruction {
         this.offset.setAddr(addr);
         this.width = tp.getWidth();
     }
+
+    @Override
+    public String getMessage() {
+        return ("Load "  + lhs.getName() + ", sp + " + offset.getAddr() + " (" + width + " byte)");
+    }
 }

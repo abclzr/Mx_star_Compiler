@@ -30,5 +30,18 @@ public class CopyInstruction extends IRInstruction {
         this.tp = type.addr_to_reg;
     }
 
+    @Override
+    public String getMessage() {
+        switch (tp) {
+            case reg_to_reg:
+                return "Copy " + lhs.getName() + " " + rhs.getName();
+            case val_to_reg:
+                return "Copy " + lhs.getName() + " " + rhs_int;
+            case addr_to_reg:
+                return "Copy " + lhs.getName() + " " + rhs_addr.getAddr();
+        }
+        return null;
+    }
+
     public enum type {reg_to_reg, val_to_reg, addr_to_reg};
 }

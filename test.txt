@@ -1,20 +1,41 @@
+class A {
+    int b, c;
+    A() {
+        b = 1;
+        c = 2;
+        return;
+    }
+
+    int getSum() {
+        return b + c;
+    }
+};
+
+A ad, dad = new A();
+
 int h(){
+    int c;
 	if (true) int c = 1;
+	while (c != 1) {
+	    c = c + 1;
+	    int a = c - 1;
+	}
 	return c;
 }
 
-int k(){
-	if (true) ;
-	else int d = 1;
-	return d;
-}
-
-int l(){
+int kk() {
+    int e = 100;
+    for (e = 1; e < 100; ++e) {
+        printlnInt(33);
+    }
 	if (true) ;
 	else if (true) int e = 1;
 	return e;
 }
 
 int main(){
+    int[][][][] a = new int[3][4][][];
+    int c = getInt();
+	bool ans = a[2][3][5][7] == 7 || c > 9;
 	return 0;
 }

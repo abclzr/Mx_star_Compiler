@@ -7,4 +7,10 @@ public class JumpInstruction extends IRInstruction {
         assert o == op.JUMP;
         this.des = des;
     }
+
+    @Override
+    public String getMessage() {
+        if (des == null) return "Jump wrong!";
+        return ("go to " + des.getName());
+    }
 }

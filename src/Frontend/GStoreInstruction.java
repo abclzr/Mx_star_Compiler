@@ -14,4 +14,9 @@ public class GStoreInstruction extends IRInstruction {
         this.value = b;
         width = tp.getWidth();
     }
+
+    @Override
+    public String getMessage() {
+        return ("GStore bottom_stack_pointer + " + offset.getAddr() + ", " + value.getName() + " (" + width + " byte)");
+    }
 }

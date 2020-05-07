@@ -14,4 +14,12 @@ public class SStoreInstruction extends IRInstruction {
         this.value = b;//maybe zero!
         width = tp.getWidth();
     }
+
+    @Override
+    public String getMessage() {
+        if (value == null)
+            return ("Store sp + " + offset.getAddr() + ", 0 (" + width + " byte)");
+        else
+            return ("Store sp + " + offset.getAddr() + ", " + value.getName() + " (" + width + " byte)");
+    }
 }

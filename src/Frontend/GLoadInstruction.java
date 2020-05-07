@@ -14,4 +14,9 @@ public class GLoadInstruction extends IRInstruction {
         this.offset = addr;
         this.width = tp.getWidth();
     }
+
+    @Override
+    public String getMessage() {
+        return ("GLoad "  + lhs.getName() + ", bottom_stack_pointer + " + offset.getAddr() + " (" + width + " byte)");
+    }
 }

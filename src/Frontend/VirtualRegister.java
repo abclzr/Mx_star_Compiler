@@ -12,14 +12,18 @@ public class VirtualRegister {
     private int relativeAddress;
     private Address addr;
 
+    public String getName() {
+        return "%" + addr.getAddr();
+    }
+
     VirtualRegister(CodeSegment inCode, Type tp) {
         this.inCodeSegment = inCode;
         this.value = 0;
         this.width = tp.getWidth();
         this.type = tp;
         this.relativeAddress = inCode.Allocate(this.width);
-        addr = new Address();
-        addr.setAddr(this.relativeAddress);
+        this.addr = new Address();
+        this.addr.setAddr(this.relativeAddress);
     }
 
     public int getRelativeAddress() {

@@ -12,4 +12,12 @@ public class CjumpInstruction extends IRInstruction {
         this.des = des;
         this.jump_when_true = jwt;
     }
+
+    @Override
+    public String getMessage() {
+        if (jump_when_true)
+            return "if (" + c.getName() + " == true) go to " + des.getName();
+        else
+            return "if (" + c.getName() + " == false) go to " + des.getName();
+    }
 }
