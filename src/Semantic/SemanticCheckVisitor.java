@@ -134,7 +134,7 @@ public class SemanticCheckVisitor extends ASTVisitor {
                     node.setIsLeftValue(true);
                 } catch (SemanticError e) {
                     FunctionSymbol fs = classScope.findFuncInScope(node.getIdentifier(), node.getPosition());
-                    node.setExprType(null);
+                    node.setExprType(fs.getType());
                     node.setFunction(fs);
                 }
                 break;

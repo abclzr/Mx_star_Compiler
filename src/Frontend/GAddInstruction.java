@@ -17,6 +17,6 @@ public class GAddInstruction extends IRInstruction {
 
     @Override
     public String getMessage() {
-        return ("Op "  + lhs.getName() + " = bottom_stack_pointer + " + offset + " (" + width + " byte)");
+        return ("Op "  + lhs.getName() + " = bottom_stack_pointer + " + offset.getAddr() + " (" + width + " byte)");
     }
 }

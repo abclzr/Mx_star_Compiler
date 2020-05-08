@@ -18,7 +18,6 @@ public class CallInstruction extends IRInstruction {
         this.callee = c;
         this.params = p;
         this.has_return_value = true;
-        System.out.println(c.getFunctionSymbol().getName());
     }
 
     CallInstruction(op o, Type tp, CodeSegment c, List<VirtualRegister> p) {

@@ -1,160 +1,42 @@
-A
-getInt
-A:
-	Label 0:
-		%4 = malloc(4)
-		Store sp + 0, %4 (4 byte)
-		Load %8, sp + 0 (4 byte)
-		%12 = %8 + 0
-		Copy %16 1
-		Store %12 + 0, %16 (4 byte)
-		Load %20, sp + 0 (4 byte)
-		%24 = %20 + 4
-		Copy %28 2
-		Store %24 + 0, %28 (4 byte)
-		Return %4
-
-getSum:
-	Label 0:
-		Load %4, sp + 0 (4 byte)
-		Load %8, %4 + 0 (4 byte)
-		Load %12, sp + 0 (4 byte)
-		Load %16, %12 + 4 (4 byte)
-		%20 = %8 + %16
-		Return %20
-
-h:
-	Label 0:
-		Store sp + 0, 0 (4 byte)
-		Copy %4 1
-		if (%4 == false) go to Label 2:
-	Label 1:
-		Copy %9 1
-		Store sp + 5, %9 (4 byte)
-	Label 2:
-	Label 3:
-		Load %13, sp + 0 (4 byte)
-		Copy %17 1
-		%21 = %13 != %17
-		if (%21 == false) go to Label 5:
-	Label 4:
-		Op %22 = sp + 0 (4 byte)
-		Load %26, sp + 0 (4 byte)
-		Copy %30 1
-		%34 = %26 + %30
-		Store %22 + 0, %34 (4 byte)
-		Load %42, sp + 0 (4 byte)
-		Copy %46 1
-		%50 = %42 - %46
-		Store sp + 38, %50 (4 byte)
-		go to Label 3:
-	Label 5:
-		Load %54, sp + 0 (4 byte)
-		Return %54
-
-kk:
-	Label 0:
-		Copy %4 100
-		Store sp + 0, %4 (4 byte)
-		Op %8 = sp + 0 (4 byte)
-		Copy %12 1
-		Store %8 + 0, %12 (4 byte)
-	Label 1:
-		Load %16, sp + 0 (4 byte)
-		Copy %20 100
-		%24 = %16 < %20
-		if (%24 == false) go to Label 4:
-	Label 2:
-		Copy %25 33
-		call (0B) printlnInt(%25, )
-	Label 3:
-		Op %29 = sp + 0 (4 byte)
-		Load %33, %29 + 0 (4 byte)
-		%37 = %33 + 1
-		Store %29 + 0, %37 (4 byte)
-		go to Label 1:
-	Label 4:
-		Copy %41 1
-		if (%41 == false) go to Label 6:
-	Label 5:
-		go to Label 7:
-	Label 6:
-		Copy %42 1
-		if (%42 == false) go to Label 9:
-	Label 8:
-		Copy %47 1
-		Store sp + 43, %47 (4 byte)
-	Label 9:
-	Label 7:
-		Load %51, sp + 0 (4 byte)
-		Return %51
+Constant Pool:
+0:	YES
+8:	NO
 
 main:
 	Label 0:
-		Copy %4 3
-		Copy %8 4
-		Copy %16 4
-		%12 = %4 * %16
-		%20 = malloc(%12)
-		Copy %24 %20
-		%28 = %24 + %12
+		Op %0 = bottom_stack_pointer + 0 (4 byte)
+		%4 = call (4B) getInt()
+		Store %0 + 0, %4 (4 byte)
+		GLoad %8, bottom_stack_pointer + 0 (4 byte)
+		Copy %12 2
+		%16 = %8 % %12
+		Copy %20 0
+		%24 = %16 == %20
+		if (%24 == false) go to Label 3:
 	Label 1:
-		Copy %36 4
-		%32 = %8 * %36
-		%40 = malloc(%32)
-		Copy %44 %40
-		%48 = %44 + %32
+		GLoad %25, bottom_stack_pointer + 0 (4 byte)
+		Copy %29 2
+		%33 = %25 > %29
+		if (%33 == false) go to Label 3:
 	Label 2:
-		Copy %52 0
-		Store %44 + 0, %52 (4 byte)
-		%44 = %44 + %36
-		if (%44 < %48) go to Label 2:
+		Copy %34 1
+		go to Label 4:
 	Label 3:
-		Store %24 + 0, %40 (4 byte)
-		%24 = %24 + %16
-		if (%24 < %28) go to Label 1:
+		Copy %34 0
 	Label 4:
-		Store sp + 0, %20 (4 byte)
-		%60 = call (4B) getInt()
-		Store sp + 56, %60 (4 byte)
-		Load %65, sp + 0 (4 byte)
-		Copy %69 2
-		%73 = %69 * 4
-		%77 = %65 + %73
-		Load %81, %77 + 0 (4 byte)
-		Copy %85 3
-		%89 = %85 * 4
-		%93 = %81 + %89
-		Load %97, %93 + 0 (4 byte)
-		Copy %101 5
-		%105 = %101 * 4
-		%109 = %97 + %105
-		Load %113, %109 + 0 (4 byte)
-		Copy %117 7
-		%121 = %117 * 4
-		%125 = %113 + %121
-		Load %129, %125 + 0 (4 byte)
-		Copy %133 7
-		%137 = %129 == %133
-		if (%137 == true) go to Label 7:
+		if (%34 == false) go to Label 6:
 	Label 5:
-		Load %138, sp + 56 (4 byte)
-		Copy %142 9
-		%146 = %138 > %142
-		if (%146 == true) go to Label 7:
+		Copy %35 0
+		call (0B) print(%35, )
+		go to Label 7:
 	Label 6:
-		Copy %147 0
-		go to Label 8:
+		Copy %39 8
+		call (0B) print(%39, )
 	Label 7:
-		Copy %147 1
-	Label 8:
-		Store sp + 64, %147 (1 byte)
-		Copy %148 0
-		Return %148
+		Copy %43 0
+		Return %43
 
 Where everything starts:
 	Label 0:
-		%4 = call (4B) A()
-		GStore bottom_stack_pointer + 8, %4 (4 byte)
 		call (4B) main()
 

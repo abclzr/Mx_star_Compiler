@@ -38,6 +38,7 @@ public class IRBuilder extends ASTVisitor {
     }
 
     public void printall() {
+        System.out.println("");
         segmentList.forEach(x -> {
             x.printall();
         });
@@ -98,8 +99,10 @@ public class IRBuilder extends ASTVisitor {
             type.setWidth();
         });
 
-        stringAdd = new CodeSegment(null);
-        stringCmp = new CodeSegment(null);
+        FunctionSymbol stringAddSymbol = new FunctionSymbol(Scope.stringType, "stringConcat", null, null, globalScope, null);
+        FunctionSymbol stringCmpSymbol = new FunctionSymbol(Scope.intType, "stringCompare", null, null, globalScope, null);
+        stringAdd = new CodeSegment(stringAddSymbol);
+        stringCmp = new CodeSegment(stringCmpSymbol);
 
         //set class member's offset and
         //create all code segments and its parameters' virtual registers for all class methods
@@ -192,6 +195,7 @@ public class IRBuilder extends ASTVisitor {
             }
         });
     }
+
     void CollectStmt(StatementNode blockNode, BasicBlock continueBlock, BasicBlock breakBlock) {
         List<StatementNode> blockNodeList = new ArrayList<>();
         blockNodeList.add(blockNode);
@@ -235,7 +239,8 @@ public class IRBuilder extends ASTVisitor {
                         VirtualRegister fC = node.getForControl().getConditionExpr().getVirtualRegister();
                         currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, fC, false, forAfter));
                         currentBlock = forBody;
-                        CollectStmt(node.getForStatement().getBlockStmtList(), forUpdate, forAfter);
+                        if (node.getForStatement() != null)
+                            CollectStmt(node.getForStatement().getBlockStmtList(), forUpdate, forAfter);
                         currentBlock = forUpdate;
                         ComputExprValue(node.getForControl().getUpdateExpr());
                         currentBlock.addInst(new JumpInstruction(IRInstruction.op.JUMP, forCond));
@@ -430,8 +435,10 @@ public class IRBuilder extends ASTVisitor {
             case CALL:
                 FunctionSymbol func = node.getCallExpr().getFuncSymbol();
                 List<VirtualRegister> list = new ArrayList<>();
-                if (func.getScope().getFatherScope() != globalScope)
+                if (func.getScope().getFatherScope() != globalScope) {
+                    ComputExprValue(node.getCallExpr());
                     list.add(node.getCallExpr().getVirtualRegister());
+                }
                 for (ExpressionNode ex : node.getCallExprList()) {
                     ComputExprValue(ex);
                     list.add(ex.getVirtualRegister());

@@ -1,41 +1,25 @@
-class A {
-    int b, c;
-    A() {
-        b = 1;
-        c = 2;
-        return;
-    }
-
-    int getSum() {
-        return b + c;
-    }
-};
-
-A ad, dad = new A();
-
-int h(){
-    int c;
-	if (true) int c = 1;
-	while (c != 1) {
-	    c = c + 1;
-	    int a = c - 1;
-	}
-	return c;
-}
-
-int kk() {
-    int e = 100;
-    for (e = 1; e < 100; ++e) {
-        printlnInt(33);
-    }
-	if (true) ;
-	else if (true) int e = 1;
-	return e;
-}
-
+/*
+Test Package: Codegen
+Author: Pikachu
+Time: 2020-02-02
+Input:
+=== input ===
+1
+=== end ===
+Output:
+=== output ===
+NO
+=== end ===
+ExitCode: 0
+InstLimit: -1
+Origin Package: Codeforces 4A #57460997
+*/
+int w;
 int main(){
-    int[][][][] a = new int[3][4][][];
-    int c = getInt();
-	bool ans = a[2][3][5][7] == 7 || c > 9;
-	return 0;
+    w = getInt();
+    if ((w%2==0)&& (w>2))
+        print("YES");
+    else
+        print("NO");
+    return 0;
 }

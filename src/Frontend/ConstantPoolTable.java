@@ -10,6 +10,7 @@ public class ConstantPoolTable {
     ConstantPoolTable() {
         pool = new byte[10000000];
         length = 0;
+        System.out.println("Constant Pool:");
     }
 
     public int getAddress() {
@@ -21,6 +22,7 @@ public class ConstantPoolTable {
     }
 
     public void allocate(String s) {
+        System.out.println(length + ":\t" + s);
         int n = s.length();
         this.allocate((byte) n);
         this.allocate((byte) (n >> 8));
