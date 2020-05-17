@@ -1,22 +1,16 @@
-/*
-Test Package: Codegen
-Author: Pikachu
-Time: 2020-02-02
-Input:
-=== input ===
-1
-=== end ===
-Output:
-=== output ===
-NO
-=== end ===
-ExitCode: 0
-InstLimit: -1
-Origin Package: Codeforces 4A #57460997
-*/
+int add(int a, int b, int c, int d, int e, int f, int g) {
+    return add(1, b, 3, 4, 5, 6, 7);
+}
+int h;
+
+void mul(int a, int b) {
+    return;
+}
+
 int w;
 int main(){
-    w = getInt();
+    h = getInt();
+    w = add(1, h, 3, 4, 5, 6, 7);
     if ((w%2==0)&& (w>2))
         print("YES");
     else

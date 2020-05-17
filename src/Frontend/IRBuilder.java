@@ -2,17 +2,11 @@ package Frontend;
 
 import AST.*;
 import Semantic.*;
-import Utils.SemanticError;
-import com.sun.source.tree.NewArrayTree;
 
-import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static Semantic.Scope.lengthSymbol;
 
 public class IRBuilder extends ASTVisitor {
     private CodeSegment globalVarSegment;
@@ -23,7 +17,7 @@ public class IRBuilder extends ASTVisitor {
     private List<CopyInstruction> constPoolWriteBack;
     private CodeSegment stringAdd;
     private CodeSegment stringCmp;
-
+    private List<VirtualRegister> globalVarList;
     //things to write back:
     //const pool pointer
     //global variable address
@@ -38,51 +32,34 @@ public class IRBuilder extends ASTVisitor {
     }
 
     public void printall() {
-        System.out.println("");
         segmentList.forEach(x -> {
             x.printall();
         });
-    }
-
-    private void fullfillStringAdd() {
-        /*
-        currentSegment = stringAdd;
-        currentBlock = stringAdd.getHeadBlock();
-        //load 2 address
-        VirtualRegister r1 = new VirtualRegister(currentSegment, Scope.intType);
-        VirtualRegister r2 = new VirtualRegister(currentSegment, Scope.intType);
-        currentBlock.addInst(new SLoadInstruction(IRInstruction.op.SLOAD, r1, 0, Scope.intType));
-        currentBlock.addInst(new SLoadInstruction(IRInstruction.op.SLOAD, r2, 4, Scope.intType));
-        //load 2 lengths
-        VirtualRegister len1 = new VirtualRegister(currentSegment, Scope.intType);
-        VirtualRegister len2 = new VirtualRegister(currentSegment, Scope.intType);
-        VirtualRegister len = new VirtualRegister(currentSegment, Scope.intType);
-        currentBlock.addInst(new LoadInstruction(IRInstruction.op.LOAD, len1, r1, 0, Scope.intType));
-        currentBlock.addInst(new LoadInstruction(IRInstruction.op.LOAD, len2, r2, 0, Scope.intType));
-        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, len, len1, "+", len2));
-        //length plus 4
-        VirtualRegister len_plus_4 = new VirtualRegister(currentSegment, Scope.intType);
-        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, len_plus_4, len, "+", 4));
-        VirtualRegister tmp = new VirtualRegister(currentSegment, Scope.intType);
-        //malloc len + 4
-        currentBlock.addInst(new MallocInstruction(IRInstruction.op.MALLOC, tmp, len_plus_4));
-        //write len
-        currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, tmp, 0, len, Scope.intType));
-        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, tmp, tmp, "+", 4));
-        BasicBlock bb = currentBlock.split();
-        */
-    }
-
-    private void fullfillStringCmp() {
-
+        System.out.println("\t.section\t.sdata,\"aw\",@progbits\n");
+        globalVarList.forEach(x -> {
+            System.out.println("\t.globl\t" + x.getGlobalVarName() + "\t#@" + x.getGlobalVarName());
+            if (x.getWidth() == 4) {
+                System.out.println("\t.p2align\t2");
+                System.out.println(x.getGlobalVarName() + ":");
+                System.out.println("\t.word\t" + 0);
+            } else {
+                System.out.println(x.getGlobalVarName() + ":");
+                System.out.println("\t.byte\t" + 0);
+            }
+        });
+        constantPoolTable.printall();
     }
 
     @Override
     public void visit(ProgramNode node) {
         CodeSegment lengthSegment = new CodeSegment(Scope.lengthSymbol);
+        lengthSegment.setFuncName("string_length");
         CodeSegment substringSegment = new CodeSegment(Scope.substringSymbol);
+        substringSegment.setFuncName("string_substring");
         CodeSegment parseIntSegment = new CodeSegment(Scope.parseIntSymbol);
+        parseIntSegment.setFuncName("string_parseInt");
         CodeSegment ordSegment = new CodeSegment(Scope.ordSymbol);
+        ordSegment.setFuncName("string_ord");
         CodeSegment printSegment = new CodeSegment(Scope.printSymbol);
         CodeSegment printlnSegment = new CodeSegment(Scope.printlnSymbol);
         CodeSegment printIntSegment = new CodeSegment(Scope.printIntSymbol);
@@ -91,6 +68,7 @@ public class IRBuilder extends ASTVisitor {
         CodeSegment getIntSegment = new CodeSegment(Scope.getIntSymbol);
         CodeSegment toStringSegment = new CodeSegment(Scope.toStringSymbol);
         CodeSegment sizeSegment = new CodeSegment(Scope.sizeSymbol);
+        sizeSegment.setFuncName("_array_size");
 
         constantPoolTable = new ConstantPoolTable();
         //get Class size
@@ -99,8 +77,8 @@ public class IRBuilder extends ASTVisitor {
             type.setWidth();
         });
 
-        FunctionSymbol stringAddSymbol = new FunctionSymbol(Scope.stringType, "stringConcat", null, null, globalScope, null);
-        FunctionSymbol stringCmpSymbol = new FunctionSymbol(Scope.intType, "stringCompare", null, null, globalScope, null);
+        FunctionSymbol stringAddSymbol = new FunctionSymbol(Scope.stringType, "string_add", null, null, globalScope, null);
+        FunctionSymbol stringCmpSymbol = new FunctionSymbol(Scope.intType, "strcmp", null, null, globalScope, null);
         stringAdd = new CodeSegment(stringAddSymbol);
         stringCmp = new CodeSegment(stringCmpSymbol);
 
@@ -121,16 +99,23 @@ public class IRBuilder extends ASTVisitor {
                 ((ClassDeclNode) x).getMethodDeclNodeList().forEach(y -> {
                     CodeSegment cs = new CodeSegment(y.getFuncSymbol());
                     cs.setClassType(((ClassDeclNode) x).getClassType());
+                    cs.setRaPointer(new VirtualRegister(cs, Scope.intType));
                     segmentList.add(cs);
+                    VirtualRegister vr;
                     //constructor has no parameters
                     if (!y.isConstructor()) {
-                        cs.setThisPointer(new VirtualRegister(cs, ((ClassDeclNode) x).getClassType()));
+                        vr = new VirtualRegister(cs, ((ClassDeclNode) x).getClassType());
+                        cs.setThisPointer(vr);
+                        cs.addParam(vr);
                         y.getParameterList().forEach(z -> {
                             VariableSymbol var = y.getFuncSymbol().getScope().findVarInScope(z.getIdentifier(), null);
-                            var.setVirtualRegister(new VirtualRegister(cs, Type.getType(z.getType())));
+                            VirtualRegister vv = new VirtualRegister(cs, Type.getType(z.getType()));
+                            var.setVirtualRegister(vv);
+                            cs.addParam(vv);
                         });
                     } else {
-                        cs.setThisPointer(new VirtualRegister(cs, ((ClassDeclNode) x).getClassType()));
+                        vr = new VirtualRegister(cs, ((ClassDeclNode) x).getClassType());
+                        cs.setThisPointer(vr);
                         ((ClassDeclNode) x).getClassType().setCreator(cs);
                     }
                 });
@@ -142,40 +127,46 @@ public class IRBuilder extends ASTVisitor {
             if (x instanceof FuncDeclNode) {
                 FunctionSymbol func = ((FuncDeclNode) x).getFunctionSymbol();
                 CodeSegment cs = new CodeSegment(func);
+                cs.setRaPointer(new VirtualRegister(cs, Scope.intType));
                 segmentList.add(cs);
                 if (((FuncDeclNode) x).getParameterList() != null)
                     ((FuncDeclNode) x).getParameterList().forEach(y -> {
+                        VirtualRegister vr = new VirtualRegister(cs, Type.getType(y.getType()));
                         VariableSymbol var = func.getScope().findVarInScope(y.getIdentifier(), null);
-                        var.setVirtualRegister(new VirtualRegister(cs, Type.getType(y.getType())));
+                        var.setVirtualRegister(vr);
+                        cs.addParam(vr);
                     });
             }
         });
 
         //scan global variables
         globalVarSegment = new CodeSegment(null);
-        currentSegment = globalVarSegment;
-        currentBlock = globalVarSegment.getHeadBlock();
+        FunctionSymbol mainSymbol = globalScope.findFuncInScope("main", null);
+        CodeSegment mainSegment = mainSymbol.getCodeSegment();
+//      currentBlock.addInst(new CallInstruction(IRInstruction.op.CALL, Scope.intType, mainSegment, new ArrayList<>()));
+        currentSegment = mainSegment;
+        currentBlock = mainSegment.getHeadBlock();
+        globalVarList = new ArrayList<>();
         node.getDeclNodeList().forEach(x -> {
             if (x instanceof VarDeclNode) {
                 Type type = Type.getType(((VarDeclNode) x).getType());
                 ((VarDeclNode) x).getVarDecoratorList().forEach(y -> {
                     if (y.getExpr() == null) {
                         VirtualRegister nv = new VirtualRegister(globalVarSegment, type);
+                        nv.setGlobalVarName(y.getIdentifier());
+                        globalVarList.add(nv);
                         y.getVariableSymbol().setVirtualRegister(nv);
                     } else {
                         ComputExprValue(y.getExpr());
                         VirtualRegister nv = new VirtualRegister(globalVarSegment, type);
+                        nv.setGlobalVarName(y.getIdentifier());
+                        globalVarList.add(nv);
                         y.getVariableSymbol().setVirtualRegister(nv);
-                        currentBlock.addInst(new GStoreInstruction(IRInstruction.op.GSTORE, nv.getAddr(), y.getExpr().getVirtualRegister(), type));
+                        currentBlock.addInst(new GStoreInstruction(IRInstruction.op.GSTORE, nv.getGlobalVarName(), y.getExpr().getVirtualRegister(), type));
                     }
                 });
             }
         });
-        FunctionSymbol mainSymbol = globalScope.findFuncInScope("main", null);
-        CodeSegment mainSegment = mainSymbol.getCodeSegment();
-        currentBlock.addInst(new CallInstruction(IRInstruction.op.CALL, Scope.intType, mainSegment, new ArrayList<>()));
-
-        segmentList.add(globalVarSegment);
 
         segmentList.forEach(cs -> {
             if (cs.getFunctionSymbol() != null) {
@@ -311,11 +302,15 @@ public class IRBuilder extends ASTVisitor {
         Type ctxType =  ((ArrayType) tp).getDimensionMinusOne();
         VirtualRegister len = list.get(tmp - 1);
         VirtualRegister malloc_size = new VirtualRegister(currentSegment, Scope.intType);
+        VirtualRegister malloc_size_p4 = new VirtualRegister(currentSegment, Scope.intType);
         VirtualRegister jump_size = new VirtualRegister(currentSegment, Scope.intType);
         currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, jump_size, ctxType.getWidth()));
         currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, malloc_size, len, "*", jump_size));
+        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, malloc_size_p4, malloc_size, "+", 4));
         VirtualRegister rt = new VirtualRegister(currentSegment, Scope.intType);
-        currentBlock.addInst(new MallocInstruction(IRInstruction.op.MALLOC, rt, malloc_size));
+        currentBlock.addInst(new MallocInstruction(IRInstruction.op.MALLOC, rt, malloc_size_p4));
+        currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, rt, 0, len, Scope.intType));
+        currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, rt, rt, "+", 4));
         VirtualRegister pointer = new VirtualRegister(currentSegment, Scope.intType);
         currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, pointer, rt));
         VirtualRegister endPointer = new VirtualRegister(currentSegment, Scope.intType);
@@ -342,12 +337,9 @@ public class IRBuilder extends ASTVisitor {
             case LITERAL:
                 switch (node.getLiteralNode().getLiteralType()) {
                     case STRING:
-                        int s = constantPoolTable.getAddress();
-                        constantPoolTable.allocate(node.getLiteralNode().getStr());
+                        String s = constantPoolTable.allocate(node.getLiteralNode().getStr());
                         vn = new VirtualRegister(currentSegment, Scope.stringType);
-                        CopyInstruction ci = new CopyInstruction(IRInstruction.op.COPY, vn, s);
-                        currentBlock.addInst(ci);
-                        constPoolWriteBack.add(ci);
+                        currentBlock.addInst(new LAInstruction(IRInstruction.op.GADD, vn, s, Scope.intType));
                         node.setVirtualRegister(vn);
                         break;
                     case INT:
@@ -379,7 +371,7 @@ public class IRBuilder extends ASTVisitor {
                         offset = varReg.getAddr();
                         vn = new VirtualRegister(currentSegment, var.getType());
                         if (varReg.getInCodeSegment() == globalVarSegment) {
-                            currentBlock.addInst(new GLoadInstruction(IRInstruction.op.GLOAD, vn, offset, var.getType()));
+                            currentBlock.addInst(new GLoadInstruction(IRInstruction.op.GLOAD, vn, varReg.getGlobalVarName(), var.getType()));
                             node.setVirtualRegister(vn);
                         } else {
                             currentBlock.addInst(new SLoadInstruction(IRInstruction.op.SLOAD, vn, offset, var.getType()));
@@ -672,7 +664,7 @@ public class IRBuilder extends ASTVisitor {
                         offset = varReg.getAddr();
                         vn = new VirtualRegister(currentSegment, var.getType());
                         if (varReg.getInCodeSegment() == globalVarSegment) {
-                            currentBlock.addInst(new GAddInstruction(IRInstruction.op.GADD, vn, offset, var.getType()));
+                            currentBlock.addInst(new LAInstruction(IRInstruction.op.GADD, vn, varReg.getGlobalVarName(), var.getType()));
                             node.setVirtualRegister(vn);
                         } else {
                             currentBlock.addInst(new SAddInstruction(IRInstruction.op.SADD, vn, offset, var.getType()));
@@ -885,5 +877,24 @@ public class IRBuilder extends ASTVisitor {
     @Override
     public void visit(VarDecoratorNode node) {
 
+    }
+
+    public void codegen() {
+        segmentList.forEach(x -> {
+            x.printall();
+        });
+        System.out.println("\t.section\t.sdata,\"aw\",@progbits\n");
+        globalVarList.forEach(x -> {
+            System.out.println("\t.globl\t" + x.getGlobalVarName() + "\t#@" + x.getGlobalVarName());
+            if (x.getWidth() == 4) {
+                System.out.println("\t.p2align\t2");
+                System.out.println(x.getGlobalVarName() + ":");
+                System.out.println("\t.word\t" + 0);
+            } else {
+                System.out.println(x.getGlobalVarName() + ":");
+                System.out.println("\t.byte\t" + 0);
+            }
+        });
+        constantPoolTable.printall();
     }
 }

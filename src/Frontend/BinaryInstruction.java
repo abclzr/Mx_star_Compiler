@@ -28,6 +28,11 @@ public class BinaryInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+
+    }
+
+    @Override
     public String getMessage() {
         if (rhs1 != null) {
             if (is_imm)
@@ -39,7 +44,6 @@ public class BinaryInstruction extends IRInstruction {
                 return lhs.getName() + " = " + 0 + " " + bop + " " + imm_rhs2;
             else
                 return lhs.getName() + " = " + 0 + " " + bop + " " + rhs2.getName();
-
         }
     }
 }

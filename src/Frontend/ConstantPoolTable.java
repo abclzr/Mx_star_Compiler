@@ -6,11 +6,12 @@ import java.util.List;
 public class ConstantPoolTable {
     private byte[] pool;
     private int length;
+    private List<String> constStringList;
 
     ConstantPoolTable() {
         pool = new byte[10000000];
         length = 0;
-        System.out.println("Constant Pool:");
+        constStringList = new ArrayList<>();
     }
 
     public int getAddress() {
@@ -21,8 +22,8 @@ public class ConstantPoolTable {
         pool[length++] = c;
     }
 
-    public void allocate(String s) {
-        System.out.println(length + ":\t" + s);
+    public String allocate(String s) {
+        constStringList.add(s);
         int n = s.length();
         this.allocate((byte) n);
         this.allocate((byte) (n >> 8));
@@ -32,5 +33,16 @@ public class ConstantPoolTable {
         for (int i = 0; i < n; ++i)
             this.allocate(buffer[i]);
         this.allocate((byte) 0);
+        return ".str." + constStringList.size();
+    }
+
+    public void printall() {
+        int i = 1;
+        for (String s : constStringList) {
+            System.out.println("\t.globl \t.str" + i);
+            System.out.println(".str" + i);
+            System.out.println("\t.asciz \t" + s);
+            i++;
+        }
     }
 }

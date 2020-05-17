@@ -52,6 +52,10 @@ public class Main {
             IRBuilder irBuilder = new IRBuilder(globalScope);
             irBuilder.visit((ProgramNode) root);
             irBuilder.printall();
+
+            ps = new PrintStream(new FileOutputStream("output.s"));
+            System.setOut(ps);
+            irBuilder.codegen();
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(e.getMessage());

@@ -1,42 +1,77 @@
-Constant Pool:
-0:	YES
-8:	NO
+
+add:
+	Label 0:
+		Copy %32 1
+		Load %36, sp + 8 (4 byte)
+		Copy %40 3
+		Copy %44 4
+		Copy %48 5
+		Copy %52 6
+		Copy %56 7
+		%60 = call (4B) add(%32, %36, %40, %44, %48, %52, %56, )
+		Return %60
+
+mul:
+	Label 0:
+		Return
 
 main:
 	Label 0:
-		Op %0 = bottom_stack_pointer + 0 (4 byte)
-		%4 = call (4B) getInt()
-		Store %0 + 0, %4 (4 byte)
-		GLoad %8, bottom_stack_pointer + 0 (4 byte)
-		Copy %12 2
-		%16 = %8 % %12
-		Copy %20 0
-		%24 = %16 == %20
-		if (%24 == false) go to Label 3:
+		Op %4 = h (4 byte)
+		%8 = call (4B) getInt()
+		Store %4 + 0, %8 (4 byte)
+		Op %12 = w (4 byte)
+		Copy %16 1
+		GLoad %20, h (4 byte)
+		Copy %24 3
+		Copy %28 4
+		Copy %32 5
+		Copy %36 6
+		Copy %40 7
+		%44 = call (4B) add(%16, %20, %24, %28, %32, %36, %40, )
+		Store %12 + 0, %44 (4 byte)
+		GLoad %48, w (4 byte)
+		Copy %52 2
+		%56 = %48 % %52
+		Copy %60 0
+		%64 = %56 == %60
+		if (%64 == false) go to Label 3:
 	Label 1:
-		GLoad %25, bottom_stack_pointer + 0 (4 byte)
-		Copy %29 2
-		%33 = %25 > %29
-		if (%33 == false) go to Label 3:
+		GLoad %65, w (4 byte)
+		Copy %69 2
+		%73 = %65 > %69
+		if (%73 == false) go to Label 3:
 	Label 2:
-		Copy %34 1
+		Copy %74 1
 		go to Label 4:
 	Label 3:
-		Copy %34 0
+		Copy %74 0
 	Label 4:
-		if (%34 == false) go to Label 6:
+		if (%74 == false) go to Label 6:
 	Label 5:
-		Copy %35 0
-		call (0B) print(%35, )
+		Op %75 = .str.1 (4 byte)
+		call (0B) print(%75, )
 		go to Label 7:
 	Label 6:
-		Copy %39 8
-		call (0B) print(%39, )
+		Op %79 = .str.2 (4 byte)
+		call (0B) print(%79, )
 	Label 7:
-		Copy %43 0
-		Return %43
+		Copy %83 0
+		Return %83
 
-Where everything starts:
-	Label 0:
-		call (4B) main()
+	.section	.sdata,"aw",@progbits
 
+	.globl	h	#@h
+	.p2align	2
+h:
+	.word	0
+	.globl	w	#@w
+	.p2align	2
+w:
+	.word	0
+	.globl 	.str1
+.str1
+	.asciz 	"YES"
+	.globl 	.str2
+.str2
+	.asciz 	"NO"

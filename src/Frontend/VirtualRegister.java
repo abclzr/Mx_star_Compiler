@@ -11,6 +11,19 @@ public class VirtualRegister {
     private Type type;
     private int relativeAddress;
     private Address addr;
+    private String globalVarName;
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setGlobalVarName(String globalVarName) {
+        this.globalVarName = globalVarName;
+    }
+
+    public String getGlobalVarName() {
+        return globalVarName;
+    }
 
     public String getName() {
         return "%" + addr.getAddr();
