@@ -29,7 +29,167 @@ public class BinaryInstruction extends IRInstruction {
 
     @Override
     public void codegen() {
-
+        if (rhs1 != null) {
+            if (is_imm) {
+                switch (bop) {
+                    case "+":
+                        break;
+                    case "<=":
+                        break;
+                    case ">=":
+                        break;
+                    case "<":
+                        break;
+                    case ">":
+                        break;
+                    case "-":
+                        break;
+                    case "*":
+                        break;
+                    case "/":
+                        break;
+                    case "%":
+                        break;
+                    case "<<":
+                        break;
+                    case ">>":
+                        break;
+                    case "&":
+                        break;
+                    case "^":
+                        break;
+                    case "|":
+                        break;
+                    case "&&":
+                        break;
+                    case "||":
+                        break;
+                    case "==":
+                        break;
+                    case "!=":
+                        break;
+                }
+            } else {
+                switch (bop) {
+                    case "+":
+                        break;
+                    case "<=":
+                        break;
+                    case ">=":
+                        break;
+                    case "<":
+                        break;
+                    case ">":
+                        break;
+                    case "-":
+                        break;
+                    case "*":
+                        break;
+                    case "/":
+                        break;
+                    case "%":
+                        break;
+                    case "<<":
+                        break;
+                    case ">>":
+                        break;
+                    case "&":
+                        break;
+                    case "^":
+                        break;
+                    case "|":
+                        break;
+                    case "&&":
+                        break;
+                    case "||":
+                        break;
+                    case "==":
+                        break;
+                    case "!=":
+                        break;
+                }
+            }
+        } else {
+            if (is_imm) {
+                switch (bop) {
+                    case "+":
+                        break;
+                    case "<=":
+                        break;
+                    case ">=":
+                        break;
+                    case "<":
+                        break;
+                    case ">":
+                        break;
+                    case "-":
+                        break;
+                    case "*":
+                        break;
+                    case "/":
+                        break;
+                    case "%":
+                        break;
+                    case "<<":
+                        break;
+                    case ">>":
+                        break;
+                    case "&":
+                        break;
+                    case "^":
+                        break;
+                    case "|":
+                        break;
+                    case "&&":
+                        break;
+                    case "||":
+                        break;
+                    case "==":
+                        break;
+                    case "!=":
+                        break;
+                }
+            } else {
+                switch (bop) {
+                    case "+":
+                        break;
+                    case "<=":
+                        break;
+                    case ">=":
+                        break;
+                    case "<":
+                        break;
+                    case ">":
+                        break;
+                    case "-":
+                        break;
+                    case "*":
+                        break;
+                    case "/":
+                        break;
+                    case "%":
+                        break;
+                    case "<<":
+                        break;
+                    case ">>":
+                        break;
+                    case "&":
+                        break;
+                    case "^":
+                        break;
+                    case "|":
+                        break;
+                    case "&&":
+                        break;
+                    case "||":
+                        break;
+                    case "==":
+                        break;
+                    case "!=":
+                        break;
+                }
+            }
+        }
     }
 
     @Override
