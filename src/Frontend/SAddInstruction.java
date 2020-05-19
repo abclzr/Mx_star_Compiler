@@ -24,6 +24,12 @@ public class SAddInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        addi("t1", "sp", String.valueOf(offset.getAddr()));
+        sw("t1", lhs.getAddrValue() + "(sp)");
+    }
+
+    @Override
     public String getMessage() {
         return ("Op "  + lhs.getName() + " = sp + " + offset.getAddr() + " (" + width + " byte)");
     }

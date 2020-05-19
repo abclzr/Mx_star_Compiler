@@ -16,6 +16,12 @@ public class LAInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        la("t1", gv);
+        sw("t1", lhs.getAddrValue() + "(sp)");
+    }
+
+    @Override
     public String getMessage() {
         return ("Op "  + lhs.getName() + " = " + gv + " (" + width + " byte)");
     }

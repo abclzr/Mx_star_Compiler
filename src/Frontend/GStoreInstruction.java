@@ -16,6 +16,18 @@ public class GStoreInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        la("t1", gv);
+        if (value.getWidth() == 4) {
+            lw("t2", value.getAddrValue() + "(sp)");
+            sw("t2", "t1", "t3");
+        } else {
+            lb("t2", value.getAddrValue() + "(sp)");
+            sb("t2", "t1", "t3");
+        }
+    }
+
+    @Override
     public String getMessage() {
         return ("GStore " + gv + ", " + value.getName() + " (" + width + " byte)");
     }

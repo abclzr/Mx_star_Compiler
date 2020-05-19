@@ -9,6 +9,17 @@ public class ReturnInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        lw("ra", returnValue.getInCodeSegment().getRaPointer().getAddrValue() + "(sp)");
+        if (returnValue != null)
+            if (returnValue.getWidth() == 4)
+                lw("a0", returnValue.getAddrValue() + "(sp)");
+            else
+                lb("a0", returnValue.getAddrValue() + "(sp)");
+        ret();
+    }
+
+    @Override
     public String getMessage() {
         if (returnValue == null)
             return "Return";

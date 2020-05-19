@@ -24,6 +24,17 @@ public class SLoadInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        if (width == 4) {
+            lw("t1", offset.getAddr() + "(sp)");
+            sw("t1", lhs.getAddrValue() + "(sp)");
+        } else {
+            lb("t1", offset.getAddr() + "(sp)");
+            sb("t1", lhs.getAddrValue() + "(sp)");
+        }
+    }
+
+    @Override
     public String getMessage() {
         return ("Load "  + lhs.getName() + ", sp + " + offset.getAddr() + " (" + width + " byte)");
     }

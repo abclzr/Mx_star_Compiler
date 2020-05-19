@@ -14,6 +14,15 @@ public class CjumpInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        lb("t1", c.getAddrValue() + "(sp)");
+        if (jump_when_true)
+            bnez("t1", des.getName());
+        else
+            beqz("t1", des.getName());
+    }
+
+    @Override
     public String getMessage() {
         if (jump_when_true)
             return "if (" + c.getName() + " == true) go to " + des.getName();

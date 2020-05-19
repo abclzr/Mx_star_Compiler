@@ -15,6 +15,26 @@ public class BranchInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        lw("t1", r1.getAddrValue() + "(sp)");
+        lw("t2", r2.getAddrValue() + "(sp)");
+        switch (bop) {
+            case "<":
+                bgt("t2", "t1", toBB.getName());
+                break;
+            case ">":
+                bgt("t1", "t2", toBB.getName());
+                break;
+            case "<=":
+                ble("t1", "t2", toBB.getName());
+                break;
+            case ">=":
+                ble("t2", "t1", toBB.getName());
+                break;
+        }
+    }
+
+    @Override
     public String getMessage() {
         return "if (" + r1.getName() + " " + bop + " " + r2.getName() + ") go to " + toBB.getName();
     }

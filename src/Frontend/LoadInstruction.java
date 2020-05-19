@@ -17,6 +17,20 @@ public class LoadInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        lw("t1", rhs.getAddrValue() + "(sp)");
+        if (offset != 0)
+            addi("t1", "t1", String.valueOf(offset));
+        if (width == 4) {
+            lw("t2", "t1");
+            sw("t2", lhs.getAddrValue() + "(sp)");
+        } else {
+            lb("t2", "t1");
+            sb("t2", lhs.getAddrValue() + "(sp)");
+        }
+    }
+
+    @Override
     public String getMessage() {
         return ("Load "  + lhs.getName() + ", " + rhs.getName() + " + " + offset + " (" + width + " byte)");
     }

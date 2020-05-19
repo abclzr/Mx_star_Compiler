@@ -9,6 +9,11 @@ public class JumpInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        j(des.getName());
+    }
+
+    @Override
     public String getMessage() {
         if (des == null) return "Jump wrong!";
         return ("go to " + des.getName());

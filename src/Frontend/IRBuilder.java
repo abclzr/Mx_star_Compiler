@@ -880,8 +880,9 @@ public class IRBuilder extends ASTVisitor {
     }
 
     public void codegen() {
+        System.out.println("\t.text\n");
         segmentList.forEach(x -> {
-            x.printall();
+            x.codegen();
         });
         System.out.println("\t.section\t.sdata,\"aw\",@progbits\n");
         globalVarList.forEach(x -> {

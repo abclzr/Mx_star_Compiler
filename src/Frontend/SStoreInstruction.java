@@ -16,6 +16,17 @@ public class SStoreInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        if (width == 4) {
+            lw("t1", value.getAddrValue() + "(sp)");
+            sw("t1", offset.getAddr() + "(sp)");
+        } else {
+            lb("t1", value.getAddrValue() + "(sp)");
+            sb("t1", offset.getAddr() + "(sp)");
+        }
+    }
+
+    @Override
     public String getMessage() {
         if (value == null)
             return ("Store sp + " + offset.getAddr() + ", 0 (" + width + " byte)");

@@ -18,6 +18,10 @@ public class CodeSegment {
     private String funcName;
     private List<VirtualRegister> params;
 
+    public List<VirtualRegister> getParams() {
+        return params;
+    }
+
     public void addParam(VirtualRegister a) {
         params.add(a);
     }

@@ -81,11 +81,11 @@ public class BasicBlock {
     }
 
     public String getName() {
-        return enclosureCodeSegment.getFuncName() + ".label" + this.id + ":";
+        return enclosureCodeSegment.getFuncName() + ".label_" + this.id;
     }
 
     public void printall() {
-        System.out.println("\t" + getName());
+        System.out.println("\t" + getName() + ":");
         instList.forEach(x -> {
             System.out.println("\t\t" + x.getMessage());
         });

@@ -3,7 +3,6 @@ package Frontend;
 public class CopyInstruction extends IRInstruction {
     private VirtualRegister lhs, rhs;
     private int rhs_int;
-    private Address rhs_addr;
     private type tp;
 
     public CopyInstruction(op o, VirtualRegister a, VirtualRegister b) {
@@ -22,12 +21,27 @@ public class CopyInstruction extends IRInstruction {
         this.tp = type.val_to_reg;
     }
 
-    public CopyInstruction(op o, VirtualRegister a, Address b) {
-        super(o);
-        assert o == op.COPY;
-        this.lhs = a;
-        this.rhs_addr = b;
-        this.tp = type.addr_to_reg;
+    @Override
+    public void codegen() {
+        switch (tp) {
+            case reg_to_reg:
+                if (rhs.getWidth() == 4)
+                    lw("t1", rhs.getAddrValue() + "(sp)");
+                else
+                    lb("t1", rhs.getAddrValue() + "(sp)");
+                if (lhs.getWidth() == 4)
+                    sw("t1", lhs.getAddrValue() + "(sp)");
+                else
+                    sb("t1", lhs.getAddrValue() + "(sp)");
+                break;
+            case val_to_reg:
+                li("t1", rhs_int);
+                if (lhs.getWidth() == 4)
+                    sw("t1", lhs.getAddrValue() + "(sp)");
+                else
+                    sb("t1", lhs.getAddrValue() + "(sp)");
+                break;
+        }
     }
 
     @Override
@@ -37,11 +51,9 @@ public class CopyInstruction extends IRInstruction {
                 return "Copy " + lhs.getName() + " " + rhs.getName();
             case val_to_reg:
                 return "Copy " + lhs.getName() + " " + rhs_int;
-            case addr_to_reg:
-                return "Copy " + lhs.getName() + " " + rhs_addr.getAddr();
         }
         return null;
     }
 
-    public enum type {reg_to_reg, val_to_reg, addr_to_reg};
+    public enum type {reg_to_reg, val_to_reg};
 }

@@ -21,6 +21,19 @@ public class MallocInstruction extends IRInstruction {
     }
 
     @Override
+    public void codegen() {
+        if (this.is_class_malloc) {
+            li("a0", malloc_size_int);
+            call("malloc");
+            sw("a0", start_addr.getAddrValue() + "(sp)");
+        } else {
+            lw("a0", malloc_size.getAddrValue() + "(sp)");
+            call("malloc");
+            sw("a0", start_addr.getAddrValue() + "(sp)");
+        }
+    }
+
+    @Override
     public String getMessage() {
         if (this.is_class_malloc)
             return (start_addr.getName() + " = malloc(" + malloc_size_int + ")");

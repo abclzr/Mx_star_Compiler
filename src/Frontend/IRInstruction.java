@@ -25,6 +25,15 @@ public abstract class IRInstruction {
     public void lw(String rd, String symbol) {
         System.out.println("\tlw " + rd + ", " + symbol);
     }
+    public void sb(String rd, String symbol) {
+        System.out.println("\tsb " + rd + ", " + symbol);
+    }
+    public void sh(String rd, String symbol) {
+        System.out.println("\tsh " + rd + ", " + symbol);
+    }
+    public void sw(String rd, String symbol) {
+        System.out.println("\tsw " + rd + ", " + symbol);
+    }
     public void sb(String rd, String symbol, String rt) {
         System.out.println("\tsb " + rd + ", " + symbol + ", " + rt);
     }
@@ -102,5 +111,74 @@ public abstract class IRInstruction {
     }
     public void call(String offset) {
         System.out.println("\tcall " + offset);
+    }
+
+//                    case "+":
+    public void add(String rd, String r1, String r2) {
+        System.out.println("\tadd " + rd + ", " + r1 + ", " + r2);
+    }
+    public void addi(String rd, String r1, String r2) {
+        System.out.println("\taddi " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "<=":
+//                    case ">=":
+//                    case "<":
+//                    case ">":
+    public void slt(String rd, String r1, String r2) {
+        System.out.println("\tslt " + rd + ", " + r1 + ", " + r2);
+    }
+    public void slti(String rd, String r1, String r2) {
+        System.out.println("\tslti " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "-":
+    public void sub(String rd, String r1, String r2) {
+        System.out.println("\tsub " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "*":
+    public void mul(String rd, String r1, String r2) {
+        System.out.println("\tmul " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "/":
+    public void div(String rd, String r1, String r2) {
+        System.out.println("\tdiv " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "%":
+    public void rem(String rd, String r1, String r2) {
+        System.out.println("\trem " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "<<":
+    public void sll(String rd, String r1, String r2) {
+        System.out.println("\tsll " + rd + ", " + r1 + ", " + r2);
+    }
+    public void slli(String rd, String r1, String r2) {
+        System.out.println("\tslli " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case ">>":
+    public void sra(String rd, String r1, String r2) {
+        System.out.println("\tsra " + rd + ", " + r1 + ", " + r2);
+    }
+    public void srai(String rd, String r1, String r2) {
+        System.out.println("\tsrai " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "&":
+    public void and(String rd, String r1, String r2) {
+        System.out.println("\tand " + rd + ", " + r1 + ", " + r2);
+    }
+    public void andi(String rd, String r1, String r2) {
+        System.out.println("\tandi " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "^":
+    public void xor(String rd, String r1, String r2) {
+        System.out.println("\txor " + rd + ", " + r1 + ", " + r2);
+    }
+    public void xori(String rd, String r1, String r2) {
+        System.out.println("\txori " + rd + ", " + r1 + ", " + r2);
+    }
+//                    case "|":
+    public void or(String rd, String r1, String r2) {
+        System.out.println("\tor " + rd + ", " + r1 + ", " + r2);
+    }
+    public void ori(String rd, String r1, String r2) {
+        System.out.println("\tori " + rd + ", " + r1 + ", " + r2);
     }
 }
