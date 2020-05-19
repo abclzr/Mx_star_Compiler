@@ -47,14 +47,14 @@ public class Main {
             new ClassMemberVisitor(globalScope).visit((ProgramNode) root);
             new SemanticCheckVisitor(globalScope).visit((ProgramNode) root);
 
-            PrintStream ps = new PrintStream(new FileOutputStream("test.ir"));
-            System.setOut(ps);
+            //PrintStream ps = new PrintStream(new FileOutputStream("test.ir"));
+            //System.setOut(ps);
             IRBuilder irBuilder = new IRBuilder(globalScope);
             irBuilder.visit((ProgramNode) root);
-            irBuilder.printall();
+            //irBuilder.printall();
 
-            ps = new PrintStream(new FileOutputStream("output.s"));
-            System.setOut(ps);
+            //ps = new PrintStream(new FileOutputStream("test.s"));
+            //System.setOut(System.out);
             irBuilder.codegen();
         } catch (Exception e) {
             e.printStackTrace();

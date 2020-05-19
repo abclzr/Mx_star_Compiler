@@ -17,12 +17,20 @@ public class SStoreInstruction extends IRInstruction {
 
     @Override
     public void codegen() {
-        if (width == 4) {
-            lw("t1", value.getAddrValue() + "(sp)");
-            sw("t1", offset.getAddr() + "(sp)");
+        if (value != null) {
+            if (width == 4) {
+                lw("t1", value.getAddrValue() + "(sp)");
+                sw("t1", offset.getAddr() + "(sp)");
+            } else {
+                lb("t1", value.getAddrValue() + "(sp)");
+                sb("t1", offset.getAddr() + "(sp)");
+            }
         } else {
-            lb("t1", value.getAddrValue() + "(sp)");
-            sb("t1", offset.getAddr() + "(sp)");
+            if (width == 4) {
+                sw("x0", offset.getAddr() + "(sp)");
+            } else {
+                sb("x0", offset.getAddr() + "(sp)");
+            }
         }
     }
 

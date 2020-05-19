@@ -92,9 +92,10 @@ public class BasicBlock {
     }
 
     public void codegen() {
-        System.out.println(getName());
+        System.out.println(getName() + ":");
         instList.forEach(x -> {
             x.codegen();
+            System.out.println("# " + x.getMessage());
         });
     }
 }

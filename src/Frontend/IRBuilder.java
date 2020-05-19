@@ -119,6 +119,11 @@ public class IRBuilder extends ASTVisitor {
                         ((ClassDeclNode) x).getClassType().setCreator(cs);
                     }
                 });
+                if (((ClassDeclNode) x).getClassType().getCreator() == null) {
+                    CodeSegment cs = new CodeSegment(null);
+                    cs.setFuncName(((ClassDeclNode) x).getIdentifier());
+                    cs.getClassType().getAllocWidth();
+                }
             }
         });
 
@@ -167,21 +172,25 @@ public class IRBuilder extends ASTVisitor {
                 });
             }
         });
+        mainSegment.setTailBlock(currentBlock);
 
         segmentList.forEach(cs -> {
             if (cs.getFunctionSymbol() != null) {
                 if (cs.getFunctionSymbol().getType() == null) {
                     currentSegment = cs;
-                    currentBlock = cs.getHeadBlock();
+                    currentBlock = cs.getTailBlock();
                     VirtualRegister th = new VirtualRegister(currentSegment, Scope.intType);
                     currentBlock.addInst(new MallocInstruction(IRInstruction.op.MALLOC, th, cs.getClassType().getAllocWidth()));
                     currentBlock.addInst(new SStoreInstruction(IRInstruction.op.SSTORE, cs.getThisPointer().getAddr(), th, Scope.intType));
                     currentSegment.setConstructorReturnValue(th);
                     CollectStmt(cs.getFunctionSymbol().getBlockContext().getStatementList(), null, null);
+                    currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, th, currentSegment));
                 } else {
                     currentSegment = cs;
-                    currentBlock = cs.getHeadBlock();
+                    currentBlock = cs.getTailBlock();
                     CollectStmt(cs.getFunctionSymbol().getBlockContext().getStatementList(), null, null);
+                    if (cs.getFunctionSymbol().getType() == Scope.voidType)
+                        currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, null, currentSegment));
                 }
             }
         });
@@ -231,7 +240,7 @@ public class IRBuilder extends ASTVisitor {
                         currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, fC, false, forAfter));
                         currentBlock = forBody;
                         if (node.getForStatement() != null)
-                            CollectStmt(node.getForStatement().getBlockStmtList(), forUpdate, forAfter);
+                            CollectStmt(node.getForStatement(), forUpdate, forAfter);
                         currentBlock = forUpdate;
                         ComputExprValue(node.getForControl().getUpdateExpr());
                         currentBlock.addInst(new JumpInstruction(IRInstruction.op.JUMP, forCond));
@@ -246,7 +255,7 @@ public class IRBuilder extends ASTVisitor {
                         VirtualRegister wC = node.getWhileExpr().getVirtualRegister();
                         currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, wC, false, whileAfter));
                         currentBlock = whileBody;
-                        CollectStmt(node.getWhileStmt().getBlockStmtList(), whileCond, whileAfter);
+                        CollectStmt(node.getWhileStmt(), whileCond, whileAfter);
                         currentBlock.addInst(new JumpInstruction(IRInstruction.op.JUMP, whileCond));
                         currentBlock = whileAfter;
                         break;
@@ -254,11 +263,11 @@ public class IRBuilder extends ASTVisitor {
                         if (node.getReturnExpr() != null) {
                             ComputExprValue(node.getReturnExpr());
                             VirtualRegister returnValue = node.getReturnExpr().getVirtualRegister();
-                            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, returnValue));
+                            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, returnValue, currentSegment));
                         } else if (currentSegment.getFunctionSymbol().getType() != null){
-                            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, null));
+                            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, null, currentSegment));
                         } else {
-                            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, currentSegment.getConstructorReturnValue()));
+                            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, currentSegment.getConstructorReturnValue(), currentSegment));
                         }
                         break;
                     case BREAK:

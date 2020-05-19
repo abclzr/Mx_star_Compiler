@@ -39,8 +39,8 @@ public class ConstantPoolTable {
     public void printall() {
         int i = 1;
         for (String s : constStringList) {
-            System.out.println("\t.globl \t.str" + i);
-            System.out.println(".str" + i);
+            System.out.println("\t.globl \t.str." + i);
+            System.out.println(".str." + i + ":");
             System.out.println("\t.asciz \t" + s);
             i++;
         }

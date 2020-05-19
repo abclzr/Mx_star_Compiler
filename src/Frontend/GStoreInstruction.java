@@ -20,10 +20,10 @@ public class GStoreInstruction extends IRInstruction {
         la("t1", gv);
         if (value.getWidth() == 4) {
             lw("t2", value.getAddrValue() + "(sp)");
-            sw("t2", "t1", "t3");
+            sw("t2", "0(t1)");
         } else {
             lb("t2", value.getAddrValue() + "(sp)");
-            sb("t2", "t1", "t3");
+            sb("t2", "0(t1)");
         }
     }
 

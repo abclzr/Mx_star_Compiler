@@ -19,10 +19,10 @@ public class GLoadInstruction extends IRInstruction {
     public void codegen() {
         la("t1", gv);
         if (lhs.getWidth() == 4) {
-            lw("t2", "t1");
+            lw("t2", "0(t1)");
             sw("t2", lhs.getAddrValue() + "(sp)");
         } else {
-            lb("t2", "t1");
+            lb("t2", "0(t1)");
             sb("t2", lhs.getAddrValue() + "(sp)");
         }
     }

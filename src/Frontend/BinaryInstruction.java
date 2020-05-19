@@ -12,6 +12,7 @@ public class BinaryInstruction extends IRInstruction {
         this.lhs = l;
         this.rhs1 = r1;//may be null!
         this.bop = bop;
+        this.width = l.getWidth();
         this.rhs2 = r2;
         assert o == op.BINARY;
         this.is_imm = false;
@@ -22,6 +23,7 @@ public class BinaryInstruction extends IRInstruction {
         this.lhs = l;
         this.rhs1 = r1;//may be null!
         this.bop = bop;
+        this.width = l.getWidth();
         this.imm_rhs2 = r2;
         assert o == op.BINARY;
         this.is_imm = true;
@@ -31,7 +33,7 @@ public class BinaryInstruction extends IRInstruction {
     public void codegen() {
         if (rhs1 != null) {
             if (is_imm) {
-                if (width == 4) {
+                if (rhs1.getWidth() == 4) {
                     lw("t1", rhs1.getAddrValue() + "(sp)");
                 } else {
                     lb("t1", rhs1.getAddrValue() + "(sp)");
@@ -102,7 +104,7 @@ public class BinaryInstruction extends IRInstruction {
                     sb("t3", lhs.getAddrValue() + "(sp)");
                 }
             } else {
-                if (width == 4) {
+                if (rhs1.getWidth() == 4) {
                     lw("t1", rhs1.getAddrValue() + "(sp)");
                     lw("t2", rhs2.getAddrValue() + "(sp)");
                 } else {
@@ -237,7 +239,7 @@ public class BinaryInstruction extends IRInstruction {
                     sb("t3", lhs.getAddrValue() + "(sp)");
                 }
             } else {
-                if (width == 4) {
+                if (rhs2.getWidth() == 4) {
                     lw("t2", rhs2.getAddrValue() + "(sp)");
                 } else {
                     lb("t2", rhs2.getAddrValue() + "(sp)");

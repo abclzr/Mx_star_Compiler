@@ -1,77 +1,98 @@
-
-add:
-	Label 0:
-		Copy %32 1
-		Load %36, sp + 8 (4 byte)
-		Copy %40 3
-		Copy %44 4
-		Copy %48 5
-		Copy %52 6
-		Copy %56 7
-		%60 = call (4B) add(%32, %36, %40, %44, %48, %52, %56, )
-		Return %60
-
-mul:
-	Label 0:
-		Return
+abs:
+	abs.label_0:
+		Load %8, sp + 4 (4 byte)
+		Copy %12 0
+		%16 = %8 > %12
+		if (%16 == false) go to abs.label_2
+	abs.label_1:
+		Load %17, sp + 4 (4 byte)
+		Return %17
+	abs.label_2:
+		Load %21, sp + 4 (4 byte)
+		%25 = 0 - %21
+		Return %25
 
 main:
-	Label 0:
-		Op %4 = h (4 byte)
-		%8 = call (4B) getInt()
+	main.label_0:
+		Op %4 = i (4 byte)
+		Copy %8 0
 		Store %4 + 0, %8 (4 byte)
-		Op %12 = w (4 byte)
-		Copy %16 1
-		GLoad %20, h (4 byte)
-		Copy %24 3
-		Copy %28 4
-		Copy %32 5
-		Copy %36 6
-		Copy %40 7
-		%44 = call (4B) add(%16, %20, %24, %28, %32, %36, %40, )
-		Store %12 + 0, %44 (4 byte)
-		GLoad %48, w (4 byte)
-		Copy %52 2
-		%56 = %48 % %52
-		Copy %60 0
-		%64 = %56 == %60
-		if (%64 == false) go to Label 3:
-	Label 1:
-		GLoad %65, w (4 byte)
-		Copy %69 2
-		%73 = %65 > %69
-		if (%73 == false) go to Label 3:
-	Label 2:
-		Copy %74 1
-		go to Label 4:
-	Label 3:
-		Copy %74 0
-	Label 4:
-		if (%74 == false) go to Label 6:
-	Label 5:
-		Op %75 = .str.1 (4 byte)
-		call (0B) print(%75, )
-		go to Label 7:
-	Label 6:
-		Op %79 = .str.2 (4 byte)
-		call (0B) print(%79, )
-	Label 7:
-		Copy %83 0
-		Return %83
+	main.label_1:
+		GLoad %12, i (4 byte)
+		Copy %16 5
+		%20 = %12 < %16
+		if (%20 == false) go to main.label_4
+	main.label_2:
+		Op %21 = j (4 byte)
+		Copy %25 0
+		Store %21 + 0, %25 (4 byte)
+	main.label_5:
+		GLoad %29, j (4 byte)
+		Copy %33 5
+		%37 = %29 < %33
+		if (%37 == false) go to main.label_8
+	main.label_6:
+		Op %38 = n (4 byte)
+		%42 = call (4B) getInt()
+		Store %38 + 0, %42 (4 byte)
+		GLoad %46, n (4 byte)
+		Copy %50 1
+		%54 = %46 == %50
+		if (%54 == false) go to main.label_10
+	main.label_9:
+		Op %55 = r (4 byte)
+		GLoad %59, i (4 byte)
+		Store %55 + 0, %59 (4 byte)
+		Op %63 = c (4 byte)
+		GLoad %67, j (4 byte)
+		Store %63 + 0, %67 (4 byte)
+	main.label_10:
+	main.label_7:
+		Op %71 = j (4 byte)
+		Load %75, %71 + 0 (4 byte)
+		%79 = %75 + 1
+		Store %71 + 0, %79 (4 byte)
+		go to main.label_5
+	main.label_8:
+	main.label_3:
+		Op %83 = i (4 byte)
+		Load %87, %83 + 0 (4 byte)
+		%91 = %87 + 1
+		Store %83 + 0, %91 (4 byte)
+		go to main.label_1
+	main.label_4:
+		Copy %95 2
+		GLoad %99, r (4 byte)
+		%103 = %95 - %99
+		%107 = call (4B) abs(%103, )
+		Copy %111 2
+		GLoad %115, c (4 byte)
+		%119 = %111 - %115
+		%123 = call (4B) abs(%119, )
+		%127 = %107 + %123
+		call (0B) printInt(%127, )
+		Copy %131 0
+		Return %131
 
 	.section	.sdata,"aw",@progbits
 
-	.globl	h	#@h
+	.globl	n	#@n
 	.p2align	2
-h:
+n:
 	.word	0
-	.globl	w	#@w
+	.globl	r	#@r
 	.p2align	2
-w:
+r:
 	.word	0
-	.globl 	.str1
-.str1
-	.asciz 	"YES"
-	.globl 	.str2
-.str2
-	.asciz 	"NO"
+	.globl	c	#@c
+	.p2align	2
+c:
+	.word	0
+	.globl	i	#@i
+	.p2align	2
+i:
+	.word	0
+	.globl	j	#@j
+	.p2align	2
+j:
+	.word	0

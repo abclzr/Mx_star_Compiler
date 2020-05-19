@@ -12,6 +12,7 @@ public class CodeSegment {
     private VirtualRegister thisPointer;
     private VirtualRegister raPointer;
     private BasicBlock headBlock;
+    private BasicBlock tailBlock;
     private ClassType classType;
     private int vsNum;
     private VirtualRegister constructorReturnValue;
@@ -69,6 +70,7 @@ public class CodeSegment {
         thisPointer = null;
         vsNum = 0;
         this.headBlock = new BasicBlock(this);
+        this.tailBlock = this.headBlock;
         if (inFunc != null) this.funcName = inFunc.getName();
         params = new ArrayList<>();
     }
@@ -90,6 +92,14 @@ public class CodeSegment {
         return headBlock;
     }
 
+    public void setTailBlock(BasicBlock tailBlock) {
+        this.tailBlock = tailBlock;
+    }
+
+    public BasicBlock getTailBlock() {
+        return tailBlock;
+    }
+
     public void printall() {
         System.out.println(this.funcName + ":");
         BasicBlock cs = headBlock;
@@ -105,6 +115,16 @@ public class CodeSegment {
         System.out.println("\t.p2align\t2\n");
         System.out.println("\t.type\t" + this.funcName + ",@function\n");
         System.out.println(this.funcName + ":");
+        IRInstruction.addi("sp", "sp", String.valueOf(-getStackStorage()));
+        int i = 0;
+        for (VirtualRegister param : params) {
+            if (param.getWidth() == 4)
+                IRInstruction.sw("a" + i, param.getAddrValue() + "(sp)");
+            else
+                IRInstruction.sb("a" + i, param.getAddrValue() + "(sp)");
+            i++;
+        }
+        IRInstruction.sw("ra", getRaPointer().getAddrValue() + "(sp)");
         BasicBlock cs = headBlock;
         while (cs != null) {
             cs.codegen();

@@ -22,10 +22,10 @@ public class LoadInstruction extends IRInstruction {
         if (offset != 0)
             addi("t1", "t1", String.valueOf(offset));
         if (width == 4) {
-            lw("t2", "t1");
+            lw("t2", "0(t1)");
             sw("t2", lhs.getAddrValue() + "(sp)");
         } else {
-            lb("t2", "t1");
+            lb("t2", "0(t1)");
             sb("t2", lhs.getAddrValue() + "(sp)");
         }
     }
