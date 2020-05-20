@@ -21,6 +21,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.BailErrorStrategy;
 
 import static java.lang.System.exit;
+import static java.lang.System.out;
 
 public class Main {
     public static ASTNode BuildAST(InputStream in) throws Exception {
@@ -34,6 +35,7 @@ public class Main {
         ASTBuilder a = new ASTBuilder();
         return a.visit(root);
     }
+//clang-9 --target=riscv32 -march=rv32ima test.s -c
 
     public static void main(String... args) throws Exception {
         try {
@@ -53,8 +55,8 @@ public class Main {
             irBuilder.visit((ProgramNode) root);
             //irBuilder.printall();
 
-            //ps = new PrintStream(new FileOutputStream("test.s"));
-            //System.setOut(System.out);
+            PrintStream ps = new PrintStream(new FileOutputStream("output.s"));
+            System.setOut(ps);
             irBuilder.codegen();
         } catch (Exception e) {
             e.printStackTrace();

@@ -18,6 +18,7 @@ public class IRBuilder extends ASTVisitor {
     private CodeSegment stringAdd;
     private CodeSegment stringCmp;
     private List<VirtualRegister> globalVarList;
+    private List<CodeSegment> defaultConstructorList;
     //things to write back:
     //const pool pointer
     //global variable address
@@ -29,6 +30,7 @@ public class IRBuilder extends ASTVisitor {
         super(globalScope);
         segmentList = new ArrayList<>();
         constPoolWriteBack = new ArrayList<>();
+        defaultConstructorList = new ArrayList<>();
     }
 
     public void printall() {
@@ -98,6 +100,7 @@ public class IRBuilder extends ASTVisitor {
                 //create all code segments and its parameters' virtual registers for all class methods
                 ((ClassDeclNode) x).getMethodDeclNodeList().forEach(y -> {
                     CodeSegment cs = new CodeSegment(y.getFuncSymbol());
+                    cs.setFuncName(((ClassDeclNode) x).getIdentifier() + "." + cs.getFuncName());
                     cs.setClassType(((ClassDeclNode) x).getClassType());
                     cs.setRaPointer(new VirtualRegister(cs, Scope.intType));
                     segmentList.add(cs);
@@ -121,8 +124,10 @@ public class IRBuilder extends ASTVisitor {
                 });
                 if (((ClassDeclNode) x).getClassType().getCreator() == null) {
                     CodeSegment cs = new CodeSegment(null);
+                    cs.setClassType(((ClassDeclNode) x).getClassType());
                     cs.setFuncName(((ClassDeclNode) x).getIdentifier());
-                    cs.getClassType().getAllocWidth();
+                    ((ClassDeclNode) x).getClassType().setCreator(cs);
+                    defaultConstructorList.add(cs);
                 }
             }
         });
@@ -174,6 +179,23 @@ public class IRBuilder extends ASTVisitor {
         });
         mainSegment.setTailBlock(currentBlock);
 
+        defaultConstructorList.forEach(cs -> {
+            currentSegment = cs;
+            currentBlock = cs.getTailBlock();
+            VirtualRegister ra = new VirtualRegister(currentSegment, Scope.intType);
+            cs.setRaPointer(ra);
+            VirtualRegister th = new VirtualRegister(currentSegment, cs.getClassType());
+            currentBlock.addInst(new MallocInstruction(IRInstruction.op.MALLOC, th, cs.getClassType().getAllocWidth()));
+            cs.setConstructorReturnValue(th);
+            AtomicInteger wid = new AtomicInteger();
+            ((ClassDeclNode) cs.getClassType().getDefine()).getVarDeclNodeList().forEach(x -> {
+                Type type = Type.getType(x.getType());
+                currentBlock.addInst(new StoreInstruction(IRInstruction.op.STORE, th, wid.get(), null, type));
+                wid.addAndGet(type.getWidth());
+            });
+            currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, th, cs));
+        });
+
         segmentList.forEach(cs -> {
             if (cs.getFunctionSymbol() != null) {
                 if (cs.getFunctionSymbol().getType() == null) {
@@ -189,11 +211,12 @@ public class IRBuilder extends ASTVisitor {
                     currentSegment = cs;
                     currentBlock = cs.getTailBlock();
                     CollectStmt(cs.getFunctionSymbol().getBlockContext().getStatementList(), null, null);
-                    if (cs.getFunctionSymbol().getType() == Scope.voidType)
-                        currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, null, currentSegment));
+                    currentBlock.addInst(new ReturnInstruction(IRInstruction.op.RETURN, null, currentSegment));
                 }
             }
         });
+
+        defaultConstructorList.forEach(x -> {segmentList.add(x);});
     }
 
     void CollectStmt(StatementNode blockNode, BasicBlock continueBlock, BasicBlock breakBlock) {
@@ -229,15 +252,19 @@ public class IRBuilder extends ASTVisitor {
                         }
                         break;
                     case FOR:
+                        BasicBlock forInit = currentBlock;
                         BasicBlock forCond = currentBlock.split();
                         BasicBlock forBody = forCond.split();
                         BasicBlock forUpdate = forBody.split();
                         BasicBlock forAfter = forUpdate.split();
+                        currentBlock = forInit;
                         ComputExprValue(node.getForControl().getInitialExpr());
                         currentBlock = forCond;
                         ComputExprValue(node.getForControl().getConditionExpr());
-                        VirtualRegister fC = node.getForControl().getConditionExpr().getVirtualRegister();
-                        currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, fC, false, forAfter));
+                        if (node.getForControl().getConditionExpr() != null) {
+                            VirtualRegister fC = node.getForControl().getConditionExpr().getVirtualRegister();
+                            currentBlock.addInst(new CjumpInstruction(IRInstruction.op.CJUMP, fC, false, forAfter));
+                        }
                         currentBlock = forBody;
                         if (node.getForStatement() != null)
                             CollectStmt(node.getForStatement(), forUpdate, forAfter);
@@ -336,6 +363,7 @@ public class IRBuilder extends ASTVisitor {
 
     public void ComputExprValue(ExpressionNode node) {
         VirtualRegister vn = null;
+        if (node == null) return;
         switch (node.getType()) {
             case THIS:
                 vn = new VirtualRegister(currentSegment, Scope.intType);
@@ -437,8 +465,12 @@ public class IRBuilder extends ASTVisitor {
                 FunctionSymbol func = node.getCallExpr().getFuncSymbol();
                 List<VirtualRegister> list = new ArrayList<>();
                 if (func.getScope().getFatherScope() != globalScope) {
-                    ComputExprValue(node.getCallExpr());
-                    list.add(node.getCallExpr().getVirtualRegister());
+                    if(node.getCallExpr().getMemberExpr() == null)
+                        list.add(currentSegment.getThisPointer());
+                    else {
+                        ComputExprValue(node.getCallExpr());
+                        list.add(node.getCallExpr().getVirtualRegister());
+                    }
                 }
                 for (ExpressionNode ex : node.getCallExprList()) {
                     ComputExprValue(ex);
@@ -671,7 +703,7 @@ public class IRBuilder extends ASTVisitor {
                     Address offset;
                     if (varReg != null) {
                         offset = varReg.getAddr();
-                        vn = new VirtualRegister(currentSegment, var.getType());
+                        vn = new VirtualRegister(currentSegment, Scope.intType);
                         if (varReg.getInCodeSegment() == globalVarSegment) {
                             currentBlock.addInst(new LAInstruction(IRInstruction.op.GADD, vn, varReg.getGlobalVarName(), var.getType()));
                             node.setVirtualRegister(vn);
@@ -707,7 +739,7 @@ public class IRBuilder extends ASTVisitor {
                     node.setVirtualRegister(c);
                 } else {
                     VariableSymbol vs = classScope.findVarInScope(node.getIdentifier(), node.getPosition());
-                    vn = new VirtualRegister(currentSegment, vs.getType());
+                    vn = new VirtualRegister(currentSegment, Scope.intType);
                     VirtualRegister offset = new VirtualRegister(currentSegment, Scope.intType);
                     currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, offset, vs.getOffsetInClass()));
                     currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, vn, c, "+", offset));

@@ -7,7 +7,7 @@ test_cases_dir = './testcases/codegen'
 compile_cmd = "bash ./build.bash"
 execute_cmd = "bash ./codegen.bash"
 excluded_test_cases = ["foo.mx"]
-ravel_path = "./ravel"
+ravel_path = "/usr/local/opt/bin/ravel"
 builtin_path = "./builtin.s"
 
 # When use_llvm is true, the output should be a .ll file, and we will use llc to

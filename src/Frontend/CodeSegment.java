@@ -115,7 +115,7 @@ public class CodeSegment {
         System.out.println("\t.p2align\t2\n");
         System.out.println("\t.type\t" + this.funcName + ",@function\n");
         System.out.println(this.funcName + ":");
-        IRInstruction.addi("sp", "sp", String.valueOf(-getStackStorage()));
+        IRInstruction.ADDI("sp", "sp", -getStackStorage());
         int i = 0;
         for (VirtualRegister param : params) {
             if (param.getWidth() == 4)
@@ -123,8 +123,10 @@ public class CodeSegment {
             else
                 IRInstruction.sb("a" + i, param.getAddrValue() + "(sp)");
             i++;
+            if (i > 7) break;
         }
-        IRInstruction.sw("ra", getRaPointer().getAddrValue() + "(sp)");
+        if (getRaPointer() != null)
+            IRInstruction.sw("ra", getRaPointer().getAddrValue() + "(sp)");
         BasicBlock cs = headBlock;
         while (cs != null) {
             cs.codegen();

@@ -12,26 +12,33 @@ public class StoreInstruction extends IRInstruction {
         assert o == op.STORE;
         this.addr = a;
         this.offset = addr;
-        this.value = b;
+        this.value = b;//may be null
         width = tp.getWidth();
     }
 
     @Override
     public void codegen() {
-        lw("t1", addr.getAddrValue() + "(sp)");
-        if (offset != 0)
-            addi("t1", "t1", String.valueOf(offset));
+        LW("t1", addr.getAddrValue(), "sp");
         if (width == 4) {
-            lw("t2", value.getAddrValue() + "(sp)");
-            sw("t2", "0(t1)");
+            if(value != null) {
+                LW("t2", value.getAddrValue(), "sp");
+                SW("t2", offset, "t1");
+            } else
+                SW("x0", offset, "t1");
         } else {
-            lb("t2", value.getAddrValue() + "(sp)");
-            sb("t2", "0(t1)");
+            if (value != null) {
+                LB("t2", value.getAddrValue(), "sp");
+                SB("t2", offset, "t1");
+            } else
+                SB("x0", offset, "t1");
         }
     }
 
     @Override
     public String getMessage() {
-        return ("Store "  + addr.getName() + " + " + offset + ", " + value.getName() + " (" + width + " byte)");
+        if (value != null)
+            return ("Store "  + addr.getName() + " + " + offset + ", " + value.getName() + " (" + width + " byte)");
+        else
+            return ("Store "  + addr.getName() + " + " + offset + ", " + 0 + " (" + width + " byte)");
     }
 }
