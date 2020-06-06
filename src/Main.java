@@ -36,7 +36,7 @@ public class Main {
         return a.visit(root);
     }
 //clang-9 --target=riscv32 -march=rv32ima test.s -c
-
+//export PATH="/usr/local/opt/bin:$PATH"
     public static void main(String... args) throws Exception {
         try {
             InputStream in = new FileInputStream("test.txt");
@@ -55,8 +55,8 @@ public class Main {
             irBuilder.visit((ProgramNode) root);
             //irBuilder.printall();
 
-            PrintStream ps = new PrintStream(new FileOutputStream("output.s"));
-            System.setOut(ps);
+            //ps = new PrintStream(new FileOutputStream("test.s"));
+            System.setOut(out);
             irBuilder.codegen();
         } catch (Exception e) {
             e.printStackTrace();

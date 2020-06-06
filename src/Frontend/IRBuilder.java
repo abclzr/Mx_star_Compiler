@@ -405,14 +405,12 @@ public class IRBuilder extends ASTVisitor {
                     VirtualRegister varReg = var.getVirtualRegister();
                     Address offset;
                     if (varReg != null) {
-                        offset = varReg.getAddr();
-                        vn = new VirtualRegister(currentSegment, var.getType());
                         if (varReg.getInCodeSegment() == globalVarSegment) {
+                            vn = new VirtualRegister(currentSegment, var.getType());
                             currentBlock.addInst(new GLoadInstruction(IRInstruction.op.GLOAD, vn, varReg.getGlobalVarName(), var.getType()));
                             node.setVirtualRegister(vn);
                         } else {
-                            currentBlock.addInst(new SLoadInstruction(IRInstruction.op.SLOAD, vn, offset, var.getType()));
-                            node.setVirtualRegister(vn);
+                            node.setVirtualRegister(varReg);
                         }
                     } else {
                         offset = var.getAddrInClass();
@@ -572,6 +570,17 @@ public class IRBuilder extends ASTVisitor {
                 VirtualRegister r1 = null, r2 = null;
                 if (!node.getOp().equals("&&") && !node.getOp().equals("||")) {
                     if (node.getOp().equals("=")) {
+                        if (node.getBinaryExpr1().getType() == ExpressionNode.Type.IDENTIFIER) {
+                            VariableSymbol var = node.getBinaryExpr1().getScope().findVar(node.getBinaryExpr1().getIdentifier(), node.getPosition());
+                            VirtualRegister varReg = var.getVirtualRegister();
+                            if (varReg != null && varReg.getInCodeSegment() != globalVarSegment) {
+                                ComputExprValue(node.getBinaryExpr2());
+                                r2 = node.getBinaryExpr2().getVirtualRegister();
+                                currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, varReg, r2));
+                                node.setVirtualRegister(varReg);
+                                break;
+                            }
+                        }
                         ComputExprAddr(node.getBinaryExpr1());
                         ComputExprValue(node.getBinaryExpr2());
                         r1 = node.getBinaryExpr1().getVirtualRegister();
