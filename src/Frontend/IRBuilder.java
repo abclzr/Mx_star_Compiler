@@ -501,6 +501,20 @@ public class IRBuilder extends ASTVisitor {
                 node.setVirtualRegister(vn);
                 break;
             case POST:
+                if (node.getPostExpr().getType() == ExpressionNode.Type.IDENTIFIER) {
+                    VariableSymbol var = node.getPostExpr().getScope().findVar(node.getPostExpr().getIdentifier(), node.getPosition());
+                    VirtualRegister varReg = var.getVirtualRegister();
+                    if (varReg != null && varReg.getInCodeSegment() != globalVarSegment) {
+                        vn = new VirtualRegister(currentSegment, Scope.intType);
+                        currentBlock.addInst(new CopyInstruction(IRInstruction.op.COPY, vn, varReg));
+                        if(node.getOp().equals("++"))
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, varReg, varReg, "+", 1));
+                        else
+                            currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, varReg, varReg, "-", 1));
+                        node.setVirtualRegister(vn);
+                        break;
+                    }
+                }
                 ComputExprAddr(node.getPostExpr());
                 VirtualRegister addr = node.getPostExpr().getVirtualRegister();
                 vn = new VirtualRegister(currentSegment, Scope.intType);
