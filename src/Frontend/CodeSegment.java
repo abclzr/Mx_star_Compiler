@@ -142,4 +142,12 @@ public class CodeSegment {
     public VirtualRegister getConstructorReturnValue() {
         return constructorReturnValue;
     }
+
+    public void optimize() {
+        BasicBlock cs = headBlock;
+        while (cs != null) {
+            cs.optimize();
+            cs = cs.getPos();
+        }
+    }
 }

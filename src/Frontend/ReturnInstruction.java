@@ -11,6 +11,11 @@ public class ReturnInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        assert false;
+    }
+
+    @Override
     public void codegen() {
         if (enclosureSegment.getRaPointer() != null)
             LW("ra", enclosureSegment.getRaPointer().getAddrValue(), "sp");
@@ -23,6 +28,12 @@ public class ReturnInstruction extends IRInstruction {
             mv("a0", "x0");
         ADDI("sp", "sp", enclosureSegment.getStackStorage());
         ret();
+    }
+
+    @Override
+    public void optimize() {
+        if (returnValue != null)
+            returnValue.read_ex(this);
     }
 
     @Override

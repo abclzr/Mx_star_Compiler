@@ -17,6 +17,14 @@ public class LoadInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        if (lhs == a)
+            lhs = b;
+        else
+            assert false;
+    }
+
+    @Override
     public void codegen() {
         LW("t1", rhs.getAddrValue(), "sp");
         if (width == 4) {
@@ -26,6 +34,12 @@ public class LoadInstruction extends IRInstruction {
             LB("t2", offset, "t1");
             SB("t2", lhs.getAddrValue(), "sp");
         }
+    }
+
+    @Override
+    public void optimize() {
+        lhs.write_ex(this);
+        rhs.read_ex(this);
     }
 
     @Override

@@ -521,6 +521,18 @@ public class IRBuilder extends ASTVisitor {
                 switch (node.getOp()) {
                     case "++":
                     case "--":
+                        if (node.getPreExpr().getType() == ExpressionNode.Type.IDENTIFIER) {
+                            VariableSymbol var = node.getPreExpr().getScope().findVar(node.getPreExpr().getIdentifier(), node.getPosition());
+                            VirtualRegister varReg = var.getVirtualRegister();
+                            if (varReg != null && varReg.getInCodeSegment() != globalVarSegment) {
+                                if(node.getOp().equals("++"))
+                                    currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, varReg, varReg, "+", 1));
+                                else
+                                    currentBlock.addInst(new BinaryInstruction(IRInstruction.op.BINARY, varReg, varReg, "-", 1));
+                                node.setVirtualRegister(varReg);
+                                break;
+                            }
+                        }
                         ComputExprAddr(node.getPreExpr());
                         VirtualRegister address = node.getPreExpr().getVirtualRegister();
                         VirtualRegister num = new VirtualRegister(currentSegment, Scope.intType);
@@ -927,6 +939,12 @@ public class IRBuilder extends ASTVisitor {
     @Override
     public void visit(VarDecoratorNode node) {
 
+    }
+
+    public void optimize() {
+        segmentList.forEach(x -> {
+            x.optimize();
+        });
     }
 
     public void codegen() {

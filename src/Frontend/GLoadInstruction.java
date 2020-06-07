@@ -16,6 +16,14 @@ public class GLoadInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        if (lhs == a)
+            lhs = b;
+        else
+            assert false;
+    }
+
+    @Override
     public void codegen() {
         la("t1", gv);
         if (lhs.getWidth() == 4) {
@@ -25,6 +33,11 @@ public class GLoadInstruction extends IRInstruction {
             lb("t2", "0(t1)");
             SB("t2", lhs.getAddrValue(), "sp");
         }
+    }
+
+    @Override
+    public void optimize() {
+        lhs.write_ex(this);
     }
 
     @Override

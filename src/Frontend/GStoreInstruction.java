@@ -16,6 +16,11 @@ public class GStoreInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        assert false;
+    }
+
+    @Override
     public void codegen() {
         la("t1", gv);
         if (value.getWidth() == 4) {
@@ -25,6 +30,11 @@ public class GStoreInstruction extends IRInstruction {
             LB("t2", value.getAddrValue(), "sp");
             sb("t2", "0(t1)");
         }
+    }
+
+    @Override
+    public void optimize() {
+        value.read_ex(this);
     }
 
     @Override

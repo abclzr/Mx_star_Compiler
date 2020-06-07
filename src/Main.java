@@ -55,6 +55,10 @@ public class Main {
             irBuilder.visit((ProgramNode) root);
             //irBuilder.printall();
 
+            //ps = new PrintStream(new FileOutputStream("test.iro"));
+            //System.setOut(ps);
+            irBuilder.optimize();
+            //irBuilder.printall();
             //ps = new PrintStream(new FileOutputStream("test.s"));
             System.setOut(out);
             irBuilder.codegen();

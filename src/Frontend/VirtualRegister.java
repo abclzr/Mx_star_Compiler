@@ -12,6 +12,36 @@ public class VirtualRegister {
     private int relativeAddress;
     private Address addr;
     private String globalVarName;
+    private int write_times;
+    private int read_times;
+    private IRInstruction last_read;
+    private IRInstruction last_write;
+
+    public int getRead_times() {
+        return read_times;
+    }
+
+    public int getWrite_times() {
+        return write_times;
+    }
+
+    public void read_ex(IRInstruction i) {
+        ++read_times;
+        last_read = i;
+    }
+
+    public void write_ex(IRInstruction i) {
+        ++write_times;
+        last_write = i;
+    }
+
+    public IRInstruction getLast_read() {
+        return last_read;
+    }
+
+    public IRInstruction getLast_write() {
+        return last_write;
+    }
 
     public int getWidth() {
         return width;
@@ -37,6 +67,10 @@ public class VirtualRegister {
         this.relativeAddress = inCode.Allocate(this.width);
         this.addr = new Address();
         this.addr.setAddr(this.relativeAddress);
+        this.read_times = 0;
+        this.write_times = 0;
+        this.last_read = null;
+        this.last_write = null;
     }
 
     public int getRelativeAddress() {

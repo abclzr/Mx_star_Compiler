@@ -30,6 +30,14 @@ public class BinaryInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        if (lhs == a)
+            lhs = b;
+        else
+            assert false;
+    }
+
+    @Override
     public void codegen() {
         if (rhs1 != null) {
             if (is_imm) {
@@ -362,6 +370,13 @@ public class BinaryInstruction extends IRInstruction {
                 }
             }
         }
+    }
+
+    @Override
+    public void optimize() {
+        if (rhs1 != null) rhs1.read_ex(this);
+        if (!is_imm) rhs2.read_ex(this);
+        lhs.write_ex(this);
     }
 
     @Override

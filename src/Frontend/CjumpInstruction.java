@@ -14,12 +14,22 @@ public class CjumpInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        assert false;
+    }
+
+    @Override
     public void codegen() {
         LB("t1", c.getAddrValue(), "sp");
         if (jump_when_true)
             bnez("t1", des.getName());
         else
             beqz("t1", des.getName());
+    }
+
+    @Override
+    public void optimize() {
+        c.read_ex(this);
     }
 
     @Override

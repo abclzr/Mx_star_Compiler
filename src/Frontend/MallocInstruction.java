@@ -21,6 +21,14 @@ public class MallocInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        if (start_addr == a)
+            start_addr = b;
+        else
+            assert false;
+    }
+
+    @Override
     public void codegen() {
         if (this.is_class_malloc) {
             li("a0", malloc_size_int);
@@ -31,6 +39,13 @@ public class MallocInstruction extends IRInstruction {
             call("malloc");
             SW("a0", start_addr.getAddrValue(), "sp");
         }
+    }
+
+    @Override
+    public void optimize() {
+        start_addr.write_ex(this);
+        if (!this.is_class_malloc)
+            malloc_size.read_ex(this);
     }
 
     @Override

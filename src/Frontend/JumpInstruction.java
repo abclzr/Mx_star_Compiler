@@ -9,8 +9,18 @@ public class JumpInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        assert false;
+    }
+
+    @Override
     public void codegen() {
         j(des.getName());
+    }
+
+    @Override
+    public void optimize() {
+
     }
 
     @Override

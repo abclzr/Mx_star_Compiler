@@ -59,12 +59,9 @@ main:
 		if (%136 < %140) go to main.label_5
 	main.label_6:
 		Store sp + 112, %132 (4 byte)
-		%148 = call (4B) getInt()
-		Copy %28 %148
-		%152 = call (4B) getInt()
-		Copy %32 %152
-		Copy %156 0
-		Copy %36 %156
+		%28 = call (4B) getInt()
+		%32 = call (4B) getInt()
+		Copy %36 0
 	main.label_7:
 		%160 = %36 < %28
 		if (%160 == false) go to main.label_10
@@ -93,10 +90,8 @@ main:
 		%213 = %12 <= %32
 		if (%213 == false) go to main.label_13
 	main.label_12:
-		Copy %214 2139062143
-		Copy %24 %214
-		Copy %218 0
-		Copy %36 %218
+		Copy %24 2139062143
+		Copy %36 0
 	main.label_14:
 		%222 = %36 < %28
 		if (%222 == false) go to main.label_17
@@ -147,8 +142,7 @@ main:
 		%357 = %353 * 4
 		%361 = %112 + %357
 		Load %365, %361 + 0 (4 byte)
-		%369 = %341 * %365
-		Copy %24 %369
+		%24 = %341 * %365
 		Copy %20 %36
 	main.label_22:
 	main.label_16:

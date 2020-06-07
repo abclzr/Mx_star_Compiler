@@ -15,6 +15,11 @@ public class BranchInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        assert false;
+    }
+
+    @Override
     public void codegen() {
         LW("t1", r1.getAddrValue(), "sp");
         LW("t2", r2.getAddrValue(), "sp");
@@ -32,6 +37,12 @@ public class BranchInstruction extends IRInstruction {
                 ble("t2", "t1", toBB.getName());
                 break;
         }
+    }
+
+    @Override
+    public void optimize() {
+        r1.read_ex(this);
+        r2.read_ex(this);
     }
 
     @Override

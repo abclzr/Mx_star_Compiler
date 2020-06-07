@@ -31,6 +31,14 @@ public class CallInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        if (lhs == a)
+            lhs = b;
+        else
+            assert false;
+    }
+
+    @Override
     public void codegen() {
         int i = 0;
         for (VirtualRegister p : params) {
@@ -58,6 +66,13 @@ public class CallInstruction extends IRInstruction {
             else
                 SB("a0", lhs.getAddrValue(), "sp");
         }
+    }
+
+    @Override
+    public void optimize() {
+        if (has_return_value) lhs.write_ex(this);
+        for (VirtualRegister x : params)
+            x.read_ex(this);
     }
 
     @Override

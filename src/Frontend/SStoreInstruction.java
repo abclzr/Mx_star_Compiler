@@ -16,6 +16,11 @@ public class SStoreInstruction extends IRInstruction {
     }
 
     @Override
+    public void replace_lhs_with(VirtualRegister a, VirtualRegister b) {
+        assert false;
+    }
+
+    @Override
     public void codegen() {
         if (value != null) {
             if (width == 4) {
@@ -32,6 +37,12 @@ public class SStoreInstruction extends IRInstruction {
                 SB("x0", offset.getAddr(), "sp");
             }
         }
+    }
+
+    @Override
+    public void optimize() {
+        if (value != null)
+            value.read_ex(this);
     }
 
     @Override
