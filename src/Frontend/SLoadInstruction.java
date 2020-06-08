@@ -32,13 +32,16 @@ public class SLoadInstruction extends IRInstruction {
     }
 
     @Override
-    public void codegen() {
+    public void codegen(RegisterAllocator regManager) {
+        String t1 = regManager.askForReg(lhs, getId(), false);
         if (width == 4) {
-            LW("t1", offset.getAddr(), "sp");
-            SW("t1", lhs.getAddrValue(), "sp");
+            LW(t1, offset.getAddr(), "sp");
+//            LW("t1", offset.getAddr(), "sp");
+//            SW("t1", lhs.getAddrValue(), "sp");
         } else {
-            LB("t1", offset.getAddr(), "sp");
-            SB("t1", lhs.getAddrValue(), "sp");
+            LB(t1, offset.getAddr(), "sp");
+//            LB("t1", offset.getAddr(), "sp");
+//            SB("t1", lhs.getAddrValue(), "sp");
         }
     }
 

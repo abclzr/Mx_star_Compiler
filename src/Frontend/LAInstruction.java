@@ -24,9 +24,9 @@ public class LAInstruction extends IRInstruction {
     }
 
     @Override
-    public void codegen() {
-        la("t1", gv);
-        SW("t1", lhs.getAddrValue(), "sp");
+    public void codegen(RegisterAllocator regManager) {
+        String l = regManager.askForReg(lhs, getId(), false);
+        la(l, gv);
     }
 
     @Override

@@ -21,14 +21,13 @@ public class SStoreInstruction extends IRInstruction {
     }
 
     @Override
-    public void codegen() {
+    public void codegen(RegisterAllocator regManager) {
         if (value != null) {
+            String v = regManager.askForReg(value, getId(), true);
             if (width == 4) {
-                LW("t1", value.getAddrValue(), "sp");
-                SW("t1", offset.getAddr(), "sp");
+                SW(v, offset.getAddr(), "sp");
             } else {
-                LB("t1", value.getAddrValue(), "sp");
-                SB("t1", offset.getAddr(), "sp");
+                SB(v, offset.getAddr(), "sp");
             }
         } else {
             if (width == 4) {

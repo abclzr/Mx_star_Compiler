@@ -46,9 +46,14 @@ public class CopyInstruction extends IRInstruction {
     }
 
     @Override
-    public void codegen() {
+    public void codegen(RegisterAllocator regManager) {
+        String t1, t2;
         switch (tp) {
             case reg_to_reg:
+                t2 = regManager.askForReg(rhs, getId(), true);
+                t1 = regManager.askForReg(lhs, getId(), false);
+                mv(t1, t2);
+                /*
                 if (rhs.getWidth() == 4)
                     LW("t1", rhs.getAddrValue(), "sp");
                 else
@@ -57,13 +62,18 @@ public class CopyInstruction extends IRInstruction {
                     SW("t1", lhs.getAddrValue(), "sp");
                 else
                     SB("t1", lhs.getAddrValue(), "sp");
+                 */
                 break;
             case val_to_reg:
+                t1 = regManager.askForReg(lhs, getId(), false);
+                li(t1, rhs_int);
+                /*
                 li("t1", rhs_int);
                 if (lhs.getWidth() == 4)
                     SW("t1", lhs.getAddrValue(), "sp");
                 else
                     SB("t1", lhs.getAddrValue(), "sp");
+                 */
                 break;
         }
     }

@@ -16,6 +16,33 @@ public class VirtualRegister {
     private int read_times;
     private IRInstruction last_read;
     private IRInstruction last_write;
+    private String occupyReg;
+    private VirtualRegister nextReg;
+    boolean dirty;
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setNextReg(VirtualRegister nextReg) {
+        this.nextReg = nextReg;
+    }
+
+    public VirtualRegister getNextReg() {
+        return nextReg;
+    }
+
+    public String getOccupyReg() {
+        return occupyReg;
+    }
+
+    public void setOccupyReg(String occupyReg) {
+        this.occupyReg = occupyReg;
+    }
 
     public int getRead_times() {
         return read_times;
@@ -64,13 +91,16 @@ public class VirtualRegister {
         this.value = 0;
         this.width = tp.getWidth();
         this.type = tp;
-        this.relativeAddress = inCode.Allocate(this.width);
+        if (inCode != null) this.relativeAddress = inCode.Allocate(this.width);
         this.addr = new Address();
         this.addr.setAddr(this.relativeAddress);
         this.read_times = 0;
         this.write_times = 0;
         this.last_read = null;
         this.last_write = null;
+        this.occupyReg = null;
+        this.nextReg = null;
+        this.dirty = false;
     }
 
     public int getRelativeAddress() {

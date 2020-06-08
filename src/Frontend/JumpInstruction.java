@@ -14,7 +14,8 @@ public class JumpInstruction extends IRInstruction {
     }
 
     @Override
-    public void codegen() {
+    public void codegen(RegisterAllocator regManager) {
+        regManager.flush_all(getId());
         j(des.getName());
     }
 

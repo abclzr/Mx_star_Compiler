@@ -21,14 +21,21 @@ public class GStoreInstruction extends IRInstruction {
     }
 
     @Override
-    public void codegen() {
-        la("t1", gv);
+    public void codegen(RegisterAllocator regManager) {
+        la("t6", gv);
+        String v = regManager.askForReg(value, getId(), true);
         if (value.getWidth() == 4) {
+            sw(v, "0(t6)");
+            /*
             LW("t2", value.getAddrValue(), "sp");
             sw("t2", "0(t1)");
+             */
         } else {
+            sb(v, "0(t6)");
+            /*
             LB("t2", value.getAddrValue(), "sp");
             sb("t2", "0(t1)");
+             */
         }
     }
 

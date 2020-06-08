@@ -39,32 +39,39 @@ public class CallInstruction extends IRInstruction {
     }
 
     @Override
-    public void codegen() {
+    public void codegen(RegisterAllocator regManager) {
         int i = 0;
         for (VirtualRegister p : params) {
             if (i <= 7) {
+                String pp = regManager.askForReg(p, getId(), true);
+                mv("a" + i, pp);
+                /*
                 if (p.getWidth() == 4)
                     LW("a" + i, p.getAddrValue(), "sp");
                 else
                     LB("a" + i, p.getAddrValue(), "sp");
+                 */
             } else {
                 int offset = -callee.getStackStorage() + callee.getParams().get(i).getAddrValue();
+                String pp = regManager.askForReg(p, getId(), true);
                 if (p.getWidth() == 4) {
-                    LW("t1", p.getAddrValue(), "sp");
-                    SW("t1", offset, "sp");
+                    SW(pp, offset, "sp");
                 } else {
-                    LB("t1", p.getAddrValue(), "sp");
-                    SB("t1", offset, "sp");
+                    SB(pp, offset, "sp");
                 }
             }
             i++;
         }
         call(callee.getFuncName());
         if (has_return_value) {
+            String t1 = regManager.askForReg(lhs, getId(), false);
+            mv(t1, "a0");
+            /*
             if (width == 4)
                 SW("a0", lhs.getAddrValue(), "sp");
             else
                 SB("a0", lhs.getAddrValue(), "sp");
+             */
         }
     }
 

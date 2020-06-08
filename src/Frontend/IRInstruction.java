@@ -4,6 +4,15 @@ public abstract class IRInstruction {
     public op IRop;
     private IRInstruction preInst;
     private IRInstruction postInst;
+    private int id;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public void setPreInst(IRInstruction p) {
         this.preInst = p;
@@ -29,7 +38,7 @@ public abstract class IRInstruction {
 
     public abstract void replace_lhs_with(VirtualRegister a, VirtualRegister b);
 
-    public abstract void codegen();
+    public abstract void codegen(RegisterAllocator regManager);
 
     public abstract void optimize();
 

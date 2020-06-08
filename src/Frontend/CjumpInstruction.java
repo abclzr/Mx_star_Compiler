@@ -19,12 +19,14 @@ public class CjumpInstruction extends IRInstruction {
     }
 
     @Override
-    public void codegen() {
-        LB("t1", c.getAddrValue(), "sp");
+    public void codegen(RegisterAllocator regManager) {
+        String t1 = regManager.askForReg(c, getId(), true);
+        //LB("t1", c.getAddrValue(), "sp");
+        regManager.flush_all(getId());
         if (jump_when_true)
-            bnez("t1", des.getName());
+            bnez(t1, des.getName());
         else
-            beqz("t1", des.getName());
+            beqz(t1, des.getName());
     }
 
     @Override
