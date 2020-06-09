@@ -132,17 +132,6 @@ public class CodeSegment {
         System.out.println("\t.type\t" + this.funcName + ",@function\n");
         System.out.println(this.funcName + ":");
         IRInstruction.ADDI("sp", "sp", -getStackStorage());
-        /*
-        int i = 0;
-        for (VirtualRegister param : params) {
-            if (param.getWidth() == 4)
-                IRInstruction.sw("a" + i, param.getAddrValue() + "(sp)");
-            else
-                IRInstruction.sb("a" + i, param.getAddrValue() + "(sp)");
-            i++;
-            if (i > 7) break;
-        }
-        */
         int i = 0;
         for (VirtualRegister v : calleeVirtualList) {
             String r = calleeRegList.get(i++);
