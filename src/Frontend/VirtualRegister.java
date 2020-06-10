@@ -20,6 +20,7 @@ public class VirtualRegister extends BaseRegister {
     private String occupyReg;
     private VirtualRegister nextReg;
     boolean dirty;
+    private int number;
 
     public void setDirty(boolean dirty) {
         this.dirty = dirty;
@@ -53,6 +54,10 @@ public class VirtualRegister extends BaseRegister {
         return write_times;
     }
 
+    public Type getType() {
+        return type;
+    }
+
     public void read_ex(IRInstruction i) {
         ++read_times;
         last_read = i;
@@ -84,7 +89,7 @@ public class VirtualRegister extends BaseRegister {
     }
 
     public String getName() {
-        return "%" + addr.getAddr();
+        return "%" + number;
     }
 
     VirtualRegister(CodeSegment inCode, Type tp) {
@@ -93,11 +98,10 @@ public class VirtualRegister extends BaseRegister {
         this.width = tp.getWidth();
         this.type = tp;
         if (inCode != null) {
-            this.relativeAddress = inCode.Allocate(this.width);
+//            this.relativeAddress = inCode.Allocate(this.width);
             inCode.addVirtual(this);
+            this.number = inCode.getVirtualNumber();
         }
-        this.addr = new Address();
-        this.addr.setAddr(this.relativeAddress);
         this.read_times = 0;
         this.write_times = 0;
         this.last_read = null;
@@ -105,6 +109,18 @@ public class VirtualRegister extends BaseRegister {
         this.occupyReg = null;
         this.nextReg = null;
         this.dirty = false;
+    }
+
+    public boolean hasAskedForSpace = false;
+
+    public VirtualRegister askForSpace() {
+        if (inCodeSegment != null) {
+            this.relativeAddress = inCodeSegment.Allocate(this.width);
+            this.addr = new Address();
+            this.addr.setAddr(this.relativeAddress);
+            hasAskedForSpace = true;
+        }
+        return this;
     }
 
     public int getRelativeAddress() {

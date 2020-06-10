@@ -1,6 +1,7 @@
 package Frontend;
 
 import Backend.BaseRegister;
+import Backend.MachineRegister;
 import Backend.RegAllocator;
 import Semantic.ClassType;
 import Semantic.FunctionSymbol;
@@ -21,11 +22,25 @@ public class CodeSegment {
     private String funcName;
     private List<VirtualRegister> params;
     public int tmp;
-    public List<String> calleeRegList;
+    public List<String> calleeMachineList;
     public List<VirtualRegister> calleeVirtualList;
     private RegisterAllocator regManager;
     public List<BasicBlock> blocks;
     private Set<BaseRegister> allVirtual;
+    private int VirtualNumber = 0;
+    private int callTimes = 0;
+
+    public void addCallTimes() {
+        ++callTimes;
+    }
+
+    public int getCallTimes() {
+        return callTimes;
+    }
+
+    public int getVirtualNumber() {
+        return VirtualNumber++;
+    }
 
     public List<VirtualRegister> getParams() {
         return params;
@@ -81,14 +96,7 @@ public class CodeSegment {
         this.tailBlock = this.headBlock;
         if (inFunc != null) this.funcName = inFunc.getName();
         params = new ArrayList<>();
-        calleeRegList = new ArrayList<>();
-        calleeVirtualList = new ArrayList<>();
-        for (int i = 0; i <= 11; ++i) {
-            calleeRegList.add("s" + i);
-            calleeVirtualList.add(new VirtualRegister(this, Scope.intType));
-        }
-        regManager = new RegisterAllocator();
-        regManager.init(calleeRegList);
+        //regManager.init(calleeMachineList);
     }
 
     public FunctionSymbol getFunctionSymbol() {
@@ -134,7 +142,7 @@ public class CodeSegment {
         IRInstruction.ADDI("sp", "sp", -getStackStorage());
         int i = 0;
         for (VirtualRegister v : calleeVirtualList) {
-            String r = calleeRegList.get(i++);
+            String r = calleeMachineList.get(i++);
             IRInstruction.SW(r, v.getAddrValue(), "sp");
         }
         if (getRaPointer() != null)
@@ -157,6 +165,22 @@ public class CodeSegment {
 
     public void optimize() {
         BasicBlock cs = headBlock;
+        while (cs != null) {
+            if (cs.getInstList().size() == 1 && cs.getInstList().get(0) instanceof CallInstruction) {
+                BasicBlock pre = cs.getPre();
+                BasicBlock pos = cs.getPos();
+                pre.addInst(cs.getInstList().get(0));
+                pos.getInstList().forEach(i -> {
+                    pre.addInst(i);
+                });
+                pre.setPos(pos.getPos());
+                pre.setPost(pos.getPost());
+                cs = pre;
+            }
+            cs = cs.getPos();
+        }
+
+        cs = headBlock;
         blocks = new ArrayList<>();
         tmp = 0;
         while (cs != null) {
@@ -218,7 +242,21 @@ public class CodeSegment {
     private RegAllocator regAllocator;
 
     public void registerAllocate() {
+        Set<BaseRegister> copy = new HashSet<>(allVirtual);
         regAllocator = new RegAllocator(this);
+        Set<MachineRegister> a = new HashSet<>();
+        copy.forEach(x -> {
+            if (x.getColor() != null)
+                a.add(x.getColor());
+            else
+                ((VirtualRegister) x).askForSpace();
+        });
+        calleeMachineList = new ArrayList<>();
+        calleeVirtualList = new ArrayList<>();
+        for (var s : a) {
+            calleeMachineList.add(s.getName());
+            calleeVirtualList.add(new VirtualRegister(this, Scope.intType).askForSpace());
+        }
     }
 
     public void addVirtual(BaseRegister v) {
@@ -228,5 +266,42 @@ public class CodeSegment {
 
     public Set<BaseRegister> getAllVregs() {
         return allVirtual;
+    }
+
+    private boolean mayFall = false;
+
+    public void mayFallInLoopCall() {
+        mayFall = true;
+    }
+
+    public boolean isMayFall() {
+        return mayFall;
+    }
+
+    public void inlineAnalysis() {
+        BasicBlock t = headBlock;
+        while (t != null) {
+            t.inlineAnalysis();
+            t = t.getPos();
+        }
+    }
+
+
+    public Map<VirtualRegister, VirtualRegister> copyWrite(CodeSegment givenCs, BasicBlock givenBlock, BasicBlock endBlock, VirtualRegister reV) {
+        Map<VirtualRegister, VirtualRegister> virtualMap = new HashMap<>();
+        Map<BasicBlock, BasicBlock> blockMap = new HashMap<>();
+        BasicBlock nowBlock = headBlock;
+        BasicBlock tmpBlock = givenBlock;
+        while (nowBlock != null) {
+            tmpBlock = tmpBlock.split();
+            blockMap.put(nowBlock, tmpBlock);
+            nowBlock = nowBlock.getPos();
+        }
+        nowBlock = headBlock;
+        while (nowBlock != null) {
+            nowBlock.copyWrite(givenCs, blockMap, virtualMap, endBlock, reV);
+            nowBlock = nowBlock.getPos();
+        }
+        return virtualMap;
     }
 }

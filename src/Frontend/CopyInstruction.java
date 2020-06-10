@@ -3,6 +3,7 @@ package Frontend;
 import Backend.BaseRegister;
 
 import java.util.HashSet;
+import java.util.Map;
 
 public class CopyInstruction extends IRInstruction {
     private VirtualRegister lhs;
@@ -57,7 +58,8 @@ public class CopyInstruction extends IRInstruction {
             case reg_to_reg:
                 t2 = getUseReg(rhs);
                 t1 = getDefReg(lhs);
-                mv(t1, t2);
+                if (!t1.equals(t2))
+                    mv(t1, t2);
                 checkDefReg(lhs);
                 break;
             case val_to_reg:
@@ -86,6 +88,17 @@ public class CopyInstruction extends IRInstruction {
             use.add(rhs);
             rhs.addUse(this);
         }
+    }
+
+    @Override
+    public IRInstruction copyWrite(CodeSegment givenCs, Map<BasicBlock, BasicBlock> blockMap, Map<VirtualRegister, VirtualRegister> virtualMap) {
+        VirtualRegister newLhs = getOrPut(givenCs, virtualMap, lhs);
+        VirtualRegister newRhs = getOrPut(givenCs, virtualMap, ((VirtualRegister) rhs));
+        switch (tp) {
+            case reg_to_reg: return new CopyInstruction(op.COPY, newLhs, newRhs);
+            case val_to_reg: return new CopyInstruction(op.COPY, newLhs, rhs_int);
+        }
+        return null;
     }
 
     @Override
