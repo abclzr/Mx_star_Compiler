@@ -72,8 +72,8 @@ public class Main {
             irBuilder.registerAllocate();
 //            long end = System.currentTimeMillis();
 //            System.err.println(end-start + "ms");
-            ps = new PrintStream(new FileOutputStream("test.s"));
-            System.setOut(ps);
+            ps = new PrintStream(new FileOutputStream("output.s"));
+            System.setOut(out);
 
             irBuilder.codegen();
         } catch (Exception e) {
